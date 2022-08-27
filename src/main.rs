@@ -1,5 +1,7 @@
-use axum::{response::Html, routing::get, Router};
 use std::net::SocketAddr;
+use serde_json::{Value, json};
+use axum::{response::Json, routing::get, Router};
+
 
 #[tokio::main]
 async fn main() {
@@ -15,6 +17,9 @@ async fn main() {
         .unwrap();
 }
 
-async fn handler() -> Html<&'static str> {
-    Html("<h1>Hello, World!</h1>")
+async fn handler() -> Json<serde_json::Value> {
+    Json(json!({
+        "code": 0,
+        "data": "Hello World"
+    }))
 }
