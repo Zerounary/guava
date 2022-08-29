@@ -39,7 +39,7 @@ async fn main() -> anyhow::Result<()>{
     
     // run it
     let port = env::var("PORT").unwrap_or_default().parse().unwrap_or(3000);
-    let addr = SocketAddr::from(([127, 0, 0, 1], port));
+    let addr = SocketAddr::from(([0, 0, 0, 0], port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
