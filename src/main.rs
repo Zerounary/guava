@@ -4,7 +4,7 @@ mod db;
 
 use std::{net::SocketAddr, sync::Arc};
 use anyhow::Context;
-use repo::user::{DynUserRepo, User, CreateUser};
+use repo::user::{DynUserRepo, User, CreateUser, UpdateUser};
 use serde_json::{Value, json};
 use axum::{response::{Json, IntoResponse}, routing::{get, post}, Router, extract::Path, Extension, http::StatusCode};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool, migrate::MigrateDatabase};
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()>{
     // build our application with a route
     let app = Router::new()
             .route("/", get(handler))
-            .route("/users/:id", get(users_show).delete(users_delete))
+            .route("/users/:id", get(users_show).delete(users_delete).patch(users_update))
             .route("/users", post(users_create))
             .layer(Extension(user_repo));
     
@@ -80,4 +80,14 @@ async fn users_delete(Path(id): Path<i64>, Extension(user_repo): Extension<DynUs
         Ok(_) => StatusCode::OK,
         Err(e) => StatusCode::NOT_FOUND,
     } 
+}
+
+async fn users_update(
+    Path(id): Path<i64>,
+    Json(mut user): Json<UpdateUser>,
+    Extension(user_repo): Extension<DynUserRepo>,
+) -> Result<Json<User>, AppError> {
+    user.id = Some(id);
+    let user = user_repo.update(user).await?;
+    Ok(Json(user))
 }

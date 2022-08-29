@@ -28,6 +28,12 @@ pub struct CreateUser {
     username: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct UpdateUser {
+    pub id: Option<i64>,
+    username: String,
+}
+
 // 业务的特性方法
 #[async_trait]
 pub trait UserRepo {
@@ -39,6 +45,9 @@ pub trait UserRepo {
 
     /// Create a new user.
     async fn create(&self, params: CreateUser) -> Result<User, UserRepoError>;
+
+    /// Update a user
+    async fn update(&self, params: UpdateUser) -> Result<User, UserRepoError>;
 }
 
 pub type DynUserRepo = Arc<dyn UserRepo + Send + Sync>;
@@ -71,6 +80,23 @@ impl UserRepo for ExampleUserRepo {
                 dbg!(e);
                 Err(UserRepoError::NotFound)
             }
+        }
+    }
+
+    async fn update(&self, user: UpdateUser) -> Result<User, UserRepoError> {
+        match user.id {
+            Some(user_id) => {
+            let result = update_user(&DB_POOL, user).await;
+            
+            match result {
+                Ok(_) => self.find(user_id).await,
+                Err(e) => {
+                    dbg!(e);
+                    Err(UserRepoError::NotFound)
+                }
+            }
+            },
+            None =>  Err(UserRepoError::NotFound),
         }
     }
     async fn delete(&self, user_id: i64) -> Result<(), UserRepoError> {
@@ -116,3 +142,18 @@ async fn delete_user(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
     .await?;
     Ok(())
 }
+
+
+async fn update_user(pool: &SqlitePool, user: UpdateUser) -> Result<(), sqlx::Error> {
+    let id = user.id.unwrap();
+    let _result = sqlx::query!("UPDATE users SET username = ? where id = ?", user.username, id)
+    .execute(pool)
+    .await?
+    .rows_affected();
+
+    if _result > 0 {
+        Ok(())
+    }else {
+        Err(sqlx::Error::RowNotFound)
+    }
+} 
