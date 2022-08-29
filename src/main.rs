@@ -1,17 +1,29 @@
 mod error;
 mod repo;
+mod db;
 
 use std::{net::SocketAddr, sync::Arc};
+use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser};
 use serde_json::{Value, json};
 use axum::{response::{Json}, routing::{get, post}, Router, extract::Path, Extension};
-use uuid::Uuid;
-
-use crate::{error::AppError, repo::user::ExampleUserRepo};
+use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
+use crate::{error::AppError, repo::user::ExampleUserRepo, db::DB_POOL};
 
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()>{
+
+    // let db = SqlitePoolOptions::new()
+    //         .max_connections(20)
+    //         .connect("sqlite:./guava.db")
+    //         .await
+    //         .context("failed to connect to DATABASE_URL");
+
+
+    let db = SqlitePool::connect("sqlite:./guava.db").await?;
+
+    sqlx::migrate!().set_ignore_missing(true).run(&db).await?;
 
     // Inject a `UserRepo` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
@@ -31,6 +43,8 @@ async fn main() {
         .serve(app.into_make_service())
         .await
         .unwrap();
+
+    anyhow::Ok(())
 }
 
 async fn handler() -> Json<serde_json::Value> {
@@ -42,7 +56,7 @@ async fn handler() -> Json<serde_json::Value> {
 
 
 async fn users_show(
-    Path(user_id): Path<Uuid>,
+    Path(user_id): Path<i64>,
     Extension(user_repo): Extension<DynUserRepo>,
 ) -> Result<Json<User>, AppError> {
     let user = user_repo.find(user_id).await?;

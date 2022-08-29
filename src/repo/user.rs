@@ -1,7 +1,9 @@
-use std::sync::Arc;
+use std::{sync::Arc, fmt::Error};
 use axum::async_trait;
-use uuid::Uuid;
+use sqlx::SqlitePool;
 use serde::{Deserialize, Serialize};
+
+use crate::db::DB_POOL;
 
 // 业务错误
 #[derive(Debug)]
@@ -15,8 +17,9 @@ pub enum UserRepoError {
 // 业务的实体
 
 #[derive(Debug, Serialize)]
+#[derive(sqlx::FromRow)]
 pub struct User {
-    id: Uuid,
+    id: i64,
     username: String,
 }
 
@@ -30,7 +33,7 @@ pub struct CreateUser {
 #[async_trait]
 pub trait UserRepo {
     /// Loop up a user by their id.
-    async fn find(&self, user_id: Uuid) -> Result<User, UserRepoError>;
+    async fn find(&self, user_id: i64) -> Result<User, UserRepoError>;
 
     /// Create a new user.
     async fn create(&self, params: CreateUser) -> Result<User, UserRepoError>;
@@ -45,12 +48,34 @@ pub struct ExampleUserRepo;
 
 #[async_trait]
 impl UserRepo for ExampleUserRepo {
-    async fn find(&self, _user_id: Uuid) -> Result<User, UserRepoError> {
+    async fn find(&self, _user_id: i64) -> Result<User, UserRepoError> {
         //unimplemented!()
-        Err(UserRepoError::NotFound)
+      let user =  find_user(&DB_POOL, _user_id).await;
+
+      match user {
+          Ok(user) => Ok(user),
+          Err(e) => {
+            dbg!(e);
+            Err(UserRepoError::NotFound)
+          },
+          _ => Err(UserRepoError::NotFound)
+      }
     }
 
     async fn create(&self, _params: CreateUser) -> Result<User, UserRepoError> {
-        unimplemented!()
+      !unimplemented!()
     }
+}
+
+async fn create_user(pool: &SqlitePool, user: CreateUser) -> anyhow::Result<i64> {
+    Ok(1 as i64)
+}
+
+async fn find_user(pool: &SqlitePool, id: i64) -> Result<User, sqlx::Error> {
+    let mut user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
+    .bind(id)
+    .fetch_one(pool)
+    .await?;
+    
+    Ok(user)
 }
