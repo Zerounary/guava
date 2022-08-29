@@ -1,7 +1,7 @@
 use axum::async_trait;
 use serde::{Deserialize, Serialize};
 use sqlx::SqlitePool;
-use std::{sync::Arc};
+use std::sync::Arc;
 
 use crate::db::DB_POOL;
 
@@ -34,6 +34,9 @@ pub trait UserRepo {
     /// Loop up a user by their id.
     async fn find(&self, user_id: i64) -> Result<User, UserRepoError>;
 
+    /// Delete a user by their id.
+    async fn delete(&self, user_id: i64) -> Result<(), UserRepoError>;
+
     /// Create a new user.
     async fn create(&self, params: CreateUser) -> Result<User, UserRepoError>;
 }
@@ -61,9 +64,20 @@ impl UserRepo for ExampleUserRepo {
 
     async fn create(&self, _params: CreateUser) -> Result<User, UserRepoError> {
         let user_id = create_user(&DB_POOL, _params).await;
-      
+
         match user_id {
             Ok(id) => self.find(id).await,
+            Err(e) => {
+                dbg!(e);
+                Err(UserRepoError::NotFound)
+            }
+        }
+    }
+    async fn delete(&self, user_id: i64) -> Result<(), UserRepoError> {
+        let result = delete_user(&DB_POOL, user_id).await;
+
+        match result {
+            Ok(_) => Ok(()),
             Err(e) => {
                 dbg!(e);
                 Err(UserRepoError::NotFound)
@@ -94,4 +108,11 @@ async fn find_user(pool: &SqlitePool, id: i64) -> Result<User, sqlx::Error> {
         .await?;
 
     Ok(user)
+}
+
+async fn delete_user(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
+    let _result = sqlx::query!("DELETE FROM users where id = ?", id)
+    .execute(pool)
+    .await?;
+    Ok(())
 }

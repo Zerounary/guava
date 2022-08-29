@@ -6,7 +6,7 @@ use std::{net::SocketAddr, sync::Arc};
 use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser};
 use serde_json::{Value, json};
-use axum::{response::{Json}, routing::{get, post}, Router, extract::Path, Extension};
+use axum::{response::{Json, IntoResponse}, routing::{get, post}, Router, extract::Path, Extension, http::StatusCode};
 use sqlx::{sqlite::SqlitePoolOptions, SqlitePool, migrate::MigrateDatabase};
 use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DB_POOL, DATABASE_URL}};
 
@@ -33,7 +33,7 @@ async fn main() -> anyhow::Result<()>{
     // build our application with a route
     let app = Router::new()
             .route("/", get(handler))
-            .route("/users/:id", get(users_show))
+            .route("/users/:id", get(users_show).delete(users_delete))
             .route("/users", post(users_create))
             .layer(Extension(user_repo));
     
@@ -73,4 +73,11 @@ async fn users_create(
     let user = user_repo.create(params).await?;
 
     Ok(user.into())
+}
+
+async fn users_delete(Path(id): Path<i64>, Extension(user_repo): Extension<DynUserRepo>) -> impl IntoResponse {
+    match user_repo.delete(id).await {
+        Ok(_) => StatusCode::OK,
+        Err(e) => StatusCode::NOT_FOUND,
+    } 
 }
