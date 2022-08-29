@@ -1,1 +1,4 @@
 /target
+guava.db
+*.db
+*.db.*
