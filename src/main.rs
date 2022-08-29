@@ -2,7 +2,7 @@ mod error;
 mod repo;
 mod db;
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{net::SocketAddr, sync::Arc, env};
 use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser, UpdateUser};
 use serde_json::{Value, json};
@@ -38,7 +38,8 @@ async fn main() -> anyhow::Result<()>{
             .layer(Extension(user_repo));
     
     // run it
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let port = env::var("PORT").unwrap_or_default().parse().unwrap_or(3000);
+    let addr = SocketAddr::from(([127, 0, 0, 1], port));
     println!("listening on {}", addr);
     axum::Server::bind(&addr)
         .serve(app.into_make_service())
