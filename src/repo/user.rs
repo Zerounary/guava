@@ -1,7 +1,7 @@
-use std::{sync::Arc, fmt::Error};
 use axum::async_trait;
-use sqlx::SqlitePool;
 use serde::{Deserialize, Serialize};
+use sqlx::SqlitePool;
+use std::{sync::Arc};
 
 use crate::db::DB_POOL;
 
@@ -16,8 +16,7 @@ pub enum UserRepoError {
 
 // 业务的实体
 
-#[derive(Debug, Serialize)]
-#[derive(sqlx::FromRow)]
+#[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct User {
     id: i64,
     username: String,
@@ -41,8 +40,6 @@ pub trait UserRepo {
 
 pub type DynUserRepo = Arc<dyn UserRepo + Send + Sync>;
 
-
-
 // 业务的特性的实现
 pub struct ExampleUserRepo;
 
@@ -50,32 +47,51 @@ pub struct ExampleUserRepo;
 impl UserRepo for ExampleUserRepo {
     async fn find(&self, _user_id: i64) -> Result<User, UserRepoError> {
         //unimplemented!()
-      let user =  find_user(&DB_POOL, _user_id).await;
+        let user = find_user(&DB_POOL, _user_id).await;
 
-      match user {
-          Ok(user) => Ok(user),
-          Err(e) => {
-            dbg!(e);
-            Err(UserRepoError::NotFound)
-          },
-          _ => Err(UserRepoError::NotFound)
-      }
+        match user {
+            Ok(user) => Ok(user),
+            Err(e) => {
+                dbg!(e);
+                Err(UserRepoError::NotFound)
+            }
+            _ => Err(UserRepoError::NotFound),
+        }
     }
 
     async fn create(&self, _params: CreateUser) -> Result<User, UserRepoError> {
-      !unimplemented!()
+        let user_id = create_user(&DB_POOL, _params).await;
+      
+        match user_id {
+            Ok(id) => self.find(id).await,
+            Err(e) => {
+                dbg!(e);
+                Err(UserRepoError::NotFound)
+            }
+        }
     }
 }
 
-async fn create_user(pool: &SqlitePool, user: CreateUser) -> anyhow::Result<i64> {
-    Ok(1 as i64)
+async fn create_user(pool: &SqlitePool, user: CreateUser) -> Result<i64, sqlx::Error> {
+    let mut conn = pool.acquire().await?;
+    let id = sqlx::query!(
+        "
+INSERT INTO users ( username )
+VALUES ( ?1 )
+        ",
+        user.username
+    )
+    .execute(&mut conn)
+    .await?
+    .last_insert_rowid();
+    Ok(id)
 }
 
 async fn find_user(pool: &SqlitePool, id: i64) -> Result<User, sqlx::Error> {
     let mut user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
-    .bind(id)
-    .fetch_one(pool)
-    .await?;
-    
+        .bind(id)
+        .fetch_one(pool)
+        .await?;
+
     Ok(user)
 }
