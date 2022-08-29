@@ -7,12 +7,13 @@ use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser};
 use serde_json::{Value, json};
 use axum::{response::{Json}, routing::{get, post}, Router, extract::Path, Extension};
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool};
-use crate::{error::AppError, repo::user::ExampleUserRepo, db::DB_POOL};
+use sqlx::{sqlite::SqlitePoolOptions, SqlitePool, migrate::MigrateDatabase};
+use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DB_POOL, DATABASE_URL}};
 
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()>{
+    dotenv::dotenv().unwrap();
 
     // let db = SqlitePoolOptions::new()
     //         .max_connections(20)
@@ -20,8 +21,12 @@ async fn main() -> anyhow::Result<()>{
     //         .await
     //         .context("failed to connect to DATABASE_URL");
 
+    if !sqlx::Sqlite::database_exists(&DATABASE_URL).await? {
+        sqlx::Sqlite::create_database(&DATABASE_URL);
+    }
 
-    let db = SqlitePool::connect("sqlite:./guava.db").await?;
+
+    let db = SqlitePool::connect(DATABASE_URL.as_str()).await?;
 
     sqlx::migrate!().set_ignore_missing(true).run(&db).await?;
 
