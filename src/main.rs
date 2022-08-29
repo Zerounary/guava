@@ -24,7 +24,7 @@ async fn main() -> anyhow::Result<()>{
 
     let db = SqlitePool::connect(DATABASE_URL.as_str()).await?;
 
-    sqlx::migrate!().set_ignore_missing(true).run(&db).await?;
+    sqlx::migrate!().run(&db).await?;
 
     // Inject a `UserRepo` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
