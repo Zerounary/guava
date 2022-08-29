@@ -21,10 +21,6 @@ async fn main() -> anyhow::Result<()>{
     //         .await
     //         .context("failed to connect to DATABASE_URL");
 
-    if !sqlx::Sqlite::database_exists(&DATABASE_URL).await? {
-        sqlx::Sqlite::create_database(&DATABASE_URL);
-    }
-
 
     let db = SqlitePool::connect(DATABASE_URL.as_str()).await?;
 
