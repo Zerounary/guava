@@ -64,7 +64,6 @@ impl UserRepo for ExampleUserRepo {
         match user {
             Ok(user) => Ok(user),
             Err(e) => {
-                dbg!(e);
                 Err(UserRepoError::NotFound)
             }
             _ => Err(UserRepoError::NotFound),
@@ -77,7 +76,6 @@ impl UserRepo for ExampleUserRepo {
         match user_id {
             Ok(id) => self.find(id).await,
             Err(e) => {
-                dbg!(e);
                 Err(UserRepoError::NotFound)
             }
         }
@@ -91,7 +89,6 @@ impl UserRepo for ExampleUserRepo {
             match result {
                 Ok(_) => self.find(user_id).await,
                 Err(e) => {
-                    dbg!(e);
                     Err(UserRepoError::NotFound)
                 }
             }
@@ -105,7 +102,6 @@ impl UserRepo for ExampleUserRepo {
         match result {
             Ok(_) => Ok(()),
             Err(e) => {
-                dbg!(e);
                 Err(UserRepoError::NotFound)
             }
         }
