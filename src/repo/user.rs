@@ -1,6 +1,6 @@
 use axum::async_trait;
 use serde::{Deserialize, Serialize};
-use sqlx::MySqlPool;
+use sqlx::PgPool;
 use std::sync::Arc;
 
 use crate::db::DB_POOL;
@@ -20,6 +20,7 @@ pub enum UserRepoError {
 pub struct User {
     id: i64,
     username: String,
+    done: bool,
 }
 
 #[derive(Debug, Deserialize)]
@@ -76,6 +77,7 @@ impl UserRepo for ExampleUserRepo {
         match user_id {
             Ok(id) => self.find(id).await,
             Err(e) => {
+                dbg!(e);
                 Err(UserRepoError::NotFound)
             }
         }
@@ -108,41 +110,39 @@ impl UserRepo for ExampleUserRepo {
     }
 }
 
-async fn create_user(pool: &MySqlPool, user: CreateUser) -> Result<i64, sqlx::Error> {
-    let mut conn = pool.acquire().await?;
-    let id = sqlx::query!(
+async fn create_user(pool: &PgPool, user: CreateUser) -> Result<i64, sqlx::Error> {
+    let rec = sqlx::query!(
         "
 INSERT INTO users ( username )
-VALUES ( ? )
+VALUES ( $1 )
+RETURNING id
         ",
         user.username
     )
-    .execute(&mut conn)
-    .await?
-    .last_insert_id();
-    Ok(id as i64)
+    .fetch_one(pool)
+    .await?;
+    Ok(rec.id)
 }
 
-async fn find_user(pool: &MySqlPool, id: i64) -> Result<User, sqlx::Error> {
-    let mut user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
-        .bind(id)
+async fn find_user(pool: &PgPool, id: i64) -> Result<User, sqlx::Error> {
+    let mut user = sqlx::query_as!(User,"SELECT * FROM users WHERE id = $1", id)
         .fetch_one(pool)
         .await?;
 
     Ok(user)
 }
 
-async fn delete_user(pool: &MySqlPool, id: i64) -> Result<(), sqlx::Error> {
-    let _result = sqlx::query!("DELETE FROM users where id = ?", id)
+async fn delete_user(pool: &PgPool, id: i64) -> Result<(), sqlx::Error> {
+    let _result = sqlx::query!("DELETE FROM users where id = $1", id)
     .execute(pool)
     .await?;
     Ok(())
 }
 
 
-async fn update_user(pool: &MySqlPool, user: UpdateUser) -> Result<(), sqlx::Error> {
+async fn update_user(pool: &PgPool, user: UpdateUser) -> Result<(), sqlx::Error> {
     let id = user.id.unwrap();
-    let _result = sqlx::query!("UPDATE users SET username = ? where id = ?", user.username, id)
+    let _result = sqlx::query!("UPDATE users SET username = $1 where id = $2", user.username, id)
     .execute(pool)
     .await?
     .rows_affected();
