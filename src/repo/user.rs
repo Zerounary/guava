@@ -1,6 +1,6 @@
 use axum::async_trait;
 use serde::{Deserialize, Serialize};
-use sqlx::SqlitePool;
+use sqlx::MySqlPool;
 use std::sync::Arc;
 
 use crate::db::DB_POOL;
@@ -108,22 +108,22 @@ impl UserRepo for ExampleUserRepo {
     }
 }
 
-async fn create_user(pool: &SqlitePool, user: CreateUser) -> Result<i64, sqlx::Error> {
+async fn create_user(pool: &MySqlPool, user: CreateUser) -> Result<i64, sqlx::Error> {
     let mut conn = pool.acquire().await?;
     let id = sqlx::query!(
         "
 INSERT INTO users ( username )
-VALUES ( ?1 )
+VALUES ( ? )
         ",
         user.username
     )
     .execute(&mut conn)
     .await?
-    .last_insert_rowid();
-    Ok(id)
+    .last_insert_id();
+    Ok(id as i64)
 }
 
-async fn find_user(pool: &SqlitePool, id: i64) -> Result<User, sqlx::Error> {
+async fn find_user(pool: &MySqlPool, id: i64) -> Result<User, sqlx::Error> {
     let mut user = sqlx::query_as::<_, User>("SELECT * FROM users WHERE id = ?")
         .bind(id)
         .fetch_one(pool)
@@ -132,7 +132,7 @@ async fn find_user(pool: &SqlitePool, id: i64) -> Result<User, sqlx::Error> {
     Ok(user)
 }
 
-async fn delete_user(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
+async fn delete_user(pool: &MySqlPool, id: i64) -> Result<(), sqlx::Error> {
     let _result = sqlx::query!("DELETE FROM users where id = ?", id)
     .execute(pool)
     .await?;
@@ -140,7 +140,7 @@ async fn delete_user(pool: &SqlitePool, id: i64) -> Result<(), sqlx::Error> {
 }
 
 
-async fn update_user(pool: &SqlitePool, user: UpdateUser) -> Result<(), sqlx::Error> {
+async fn update_user(pool: &MySqlPool, user: UpdateUser) -> Result<(), sqlx::Error> {
     let id = user.id.unwrap();
     let _result = sqlx::query!("UPDATE users SET username = ? where id = ?", user.username, id)
     .execute(pool)

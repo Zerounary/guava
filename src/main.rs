@@ -7,7 +7,7 @@ use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser, UpdateUser};
 use serde_json::{Value, json};
 use axum::{response::{Json, IntoResponse}, routing::{get, post}, Router, extract::Path, Extension, http::StatusCode};
-use sqlx::{sqlite::SqlitePoolOptions, SqlitePool, migrate::MigrateDatabase};
+use sqlx::{MySqlPool, migrate::MigrateDatabase};
 use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DB_POOL, DATABASE_URL}};
 
 
@@ -22,7 +22,7 @@ async fn main() -> anyhow::Result<()>{
     //         .context("failed to connect to DATABASE_URL");
 
 
-    let db = SqlitePool::connect(DATABASE_URL.as_str()).await?;
+    let db = MySqlPool::connect(DATABASE_URL.as_str()).await?;
 
     sqlx::migrate!().run(&db).await?;
 
