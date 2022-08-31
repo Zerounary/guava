@@ -1,13 +1,21 @@
-mod error;
-mod repo;
-mod db;
+
+pub mod error;
+pub mod service;
+pub mod drivers;
+pub mod entities;
+pub mod repository;
+pub mod server;
 
 use std::{net::SocketAddr, sync::Arc, env};
-use repo::user::{DynUserRepo, User, CreateUser, UpdateUser};
 use serde_json::{json};
 use axum::{response::{Json, IntoResponse}, routing::{get, post}, Router, extract::Path, Extension, http::StatusCode};
-use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DATABASE_URL, DB}};
+use server::api::model::{CreateUser, UpdateUser};
+use service::uesr_service::{CreateUserInput, UpdateUserInput};
+use crate::{error::AppError, drivers::db::{DATABASE_URL, DB, }, entities::User, service::Service};
 
+struct AppState {
+    service: Service
+}
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()>{
@@ -26,14 +34,17 @@ async fn main() -> anyhow::Result<()>{
 
     // Inject a `UserRepo` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
-    let user_repo = Arc::new(ExampleUserRepo) as DynUserRepo;
+    // let service = Arc::new(ExampleUserRepo) as DynUserRepo;
+    let service = Arc::new(AppState {
+        service: Service::new(db)
+    });
 
     // build our application with a route
     let app = Router::new()
             .route("/", get(handler))
             .route("/users/:id", get(users_show).delete(users_delete).patch(users_update))
             .route("/users", post(users_create))
-            .layer(Extension(user_repo));
+            .layer(Extension(service));
     
     // run it
     let port = env::var("PORT").unwrap_or_default().parse().unwrap_or(3000);
@@ -57,9 +68,9 @@ async fn handler() -> Json<serde_json::Value> {
 
 async fn users_show(
     Path(user_id): Path<i64>,
-    Extension(user_repo): Extension<DynUserRepo>,
+    Extension(state): Extension<Arc<AppState>>
 ) -> Result<Json<User>, AppError> {
-    let user = user_repo.find(user_id).await?;
+    let user = state.service.find(user_id).await?;
 
     Ok(user.into())
 }
@@ -67,15 +78,18 @@ async fn users_show(
 /// Handler for `POST /users`.
 async fn users_create(
     Json(params): Json<CreateUser>,
-    Extension(user_repo): Extension<DynUserRepo>,
+    Extension(state): Extension<Arc<AppState>>
 ) -> Result<Json<User>, AppError> {
-    let user = user_repo.create(params).await?;
+    let service_input = CreateUserInput {
+        username: params.username,
+    };
+    let user = state.service.create(service_input).await?;
 
     Ok(user.into())
 }
 
-async fn users_delete(Path(id): Path<i64>, Extension(user_repo): Extension<DynUserRepo>) -> impl IntoResponse {
-    match user_repo.delete(id).await {
+async fn users_delete(Path(id): Path<i64>, Extension(state): Extension<Arc<AppState>>) -> impl IntoResponse {
+    match state.service.delete(id).await {
         Ok(_) => StatusCode::OK,
         Err(_e) => StatusCode::NOT_FOUND,
     } 
@@ -84,9 +98,14 @@ async fn users_delete(Path(id): Path<i64>, Extension(user_repo): Extension<DynUs
 async fn users_update(
     Path(id): Path<i64>,
     Json(mut user): Json<UpdateUser>,
-    Extension(user_repo): Extension<DynUserRepo>,
+    Extension(state): Extension<Arc<AppState>>
 ) -> Result<Json<User>, AppError> {
     user.id = Some(id);
-    let user = user_repo.update(user).await?;
+    let service_input = UpdateUserInput {
+        id,
+        username: user.username,
+        done: user.done,
+    };
+    let user = state.service.update(service_input).await?;
     Ok(Json(user))
 }

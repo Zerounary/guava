@@ -1,7 +1,7 @@
 use axum::{response::{IntoResponse, Response}, http::StatusCode, Json};
 use serde_json::json;
 
-use crate::repo::user::UserRepoError;
+use crate::service::uesr_service::UserRepoError;
 
 pub enum AppError {
     UserRepo(UserRepoError),
