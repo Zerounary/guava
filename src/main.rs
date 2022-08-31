@@ -1,43 +1,55 @@
-
-pub mod error;
-pub mod service;
 pub mod drivers;
 pub mod entities;
+pub mod error;
 pub mod repository;
 pub mod server;
+pub mod service;
 
-use std::{net::SocketAddr, sync::Arc, env};
-use axum::{routing::{get, post}, Router, Extension};
-use crate::{drivers::db::{DATABASE_URL, DBOptions, }, service::Service, server::api::commands::{user::{users_update, users_delete, users_show, users_create}, hello::hello_world}};
+use crate::{
+    drivers::db::{DBOptions, DATABASE_URL},
+    server::api::commands::{
+        hello::hello_world,
+        user::{users_create, users_delete, users_show, users_update},
+    },
+    service::Service,
+};
+use axum::{
+    routing::{get, post},
+    Extension, Router,
+};
+use std::{env, net::SocketAddr, sync::Arc};
 
 pub struct AppState {
-    service: Service
+    service: Service,
 }
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()>{
+async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
 
     let db = DBOptions::new()
-                .max_connections(20)
-                .connect(DATABASE_URL.as_str()).await?;
-
+        .max_connections(20)
+        .connect(DATABASE_URL.as_str())
+        .await?;
 
     sqlx::migrate!().run(&db).await?;
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
     let service = Arc::new(AppState {
-        service: Service::new(db)
+        service: Service::new(db),
     });
 
     // build our application with a route
     let app = Router::new()
-            .route("/", get(hello_world))
-            .route("/users/:id", get(users_show).delete(users_delete).patch(users_update))
-            .route("/users", post(users_create))
-            .layer(Extension(service));
-    
+        .route("/", get(hello_world))
+        .route(
+            "/users/:id",
+            get(users_show).delete(users_delete).patch(users_update),
+        )
+        .route("/users", post(users_create))
+        .layer(Extension(service));
+
     // run it
     let port = env::var("PORT").unwrap_or_default().parse().unwrap_or(3000);
     let addr = SocketAddr::from(([0, 0, 0, 0], port));

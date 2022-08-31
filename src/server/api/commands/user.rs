@@ -1,12 +1,21 @@
 use std::sync::Arc;
 
-use axum::{response::{Json, IntoResponse}, extract::Path, Extension, http::StatusCode};
-use crate::{service::uesr_service::{CreateUserInput, UpdateUserInput}, AppState, server::api::model::{CreateUserVO, UserVO, UpdateUserVO}};
-use crate::{error::AppError, };
+use crate::error::AppError;
+use crate::{
+    server::api::model::{CreateUserVO, UpdateUserVO, UserVO},
+    service::uesr_service::{CreateUserInput, UpdateUserInput},
+    AppState,
+};
+use axum::{
+    extract::Path,
+    http::StatusCode,
+    response::{IntoResponse, Json},
+    Extension,
+};
 
 pub async fn users_show(
     Path(user_id): Path<i64>,
-    Extension(state): Extension<Arc<AppState>>
+    Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<UserVO>, AppError> {
     let user = state.service.find(user_id).await?;
 
@@ -16,7 +25,7 @@ pub async fn users_show(
 /// Handler for `POST /users`.
 pub async fn users_create(
     Json(params): Json<CreateUserVO>,
-    Extension(state): Extension<Arc<AppState>>
+    Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<UserVO>, AppError> {
     let service_input = CreateUserInput {
         username: params.username,
@@ -26,17 +35,20 @@ pub async fn users_create(
     Ok(Json(user.into()))
 }
 
-pub async fn users_delete(Path(id): Path<i64>, Extension(state): Extension<Arc<AppState>>) -> impl IntoResponse {
+pub async fn users_delete(
+    Path(id): Path<i64>,
+    Extension(state): Extension<Arc<AppState>>,
+) -> impl IntoResponse {
     match state.service.delete(id).await {
         Ok(_) => StatusCode::OK,
         Err(_e) => StatusCode::NOT_FOUND,
-    } 
+    }
 }
 
 pub async fn users_update(
     Path(id): Path<i64>,
     Json(mut user): Json<UpdateUserVO>,
-    Extension(state): Extension<Arc<AppState>>
+    Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<UserVO>, AppError> {
     user.id = Some(id);
     let service_input = UpdateUserInput {

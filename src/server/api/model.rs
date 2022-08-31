@@ -27,7 +27,7 @@ impl From<entities::UserBO> for UserVO {
         UserVO {
             id: user.id,
             username: user.username,
-            done: user.done
+            done: user.done,
         }
     }
 }

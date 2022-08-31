@@ -1,6 +1,6 @@
-use serde::{Deserialize};
+use serde::Deserialize;
 
-use crate::{entities::UserBO};
+use crate::entities::UserBO;
 
 use super::Service;
 
