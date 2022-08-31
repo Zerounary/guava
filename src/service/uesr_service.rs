@@ -1,6 +1,6 @@
 use serde::{Deserialize};
 
-use crate::{drivers::db::DB_POOL, entities::User};
+use crate::{entities::UserBO};
 
 use super::Service;
 
@@ -27,7 +27,7 @@ pub struct UpdateUserInput {
 }
 
 impl Service {
-    pub async fn find(&self, _user_id: i64) -> Result<User, UserRepoError> {
+    pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
         //unimplemented!()
         let user = self.repo.find_user(&self.db, _user_id).await;
 
@@ -37,10 +37,10 @@ impl Service {
         }
     }
 
-    pub async fn create(&self, input: CreateUserInput) -> Result<User, UserRepoError> {
-        let user = User {
+    pub async fn create(&self, input: CreateUserInput) -> Result<UserBO, UserRepoError> {
+        let user = UserBO {
             username: input.username,
-            ..User::default()
+            ..UserBO::default()
         };
         let user_id = self.repo.create_user(&self.db, user).await;
 
@@ -53,8 +53,8 @@ impl Service {
         }
     }
 
-    pub async fn update(&self, input: UpdateUserInput) -> Result<User, UserRepoError> {
-        let user = User {
+    pub async fn update(&self, input: UpdateUserInput) -> Result<UserBO, UserRepoError> {
+        let user = UserBO {
             id: input.id,
             username: input.username,
             done: input.done,
@@ -67,7 +67,7 @@ impl Service {
         }
     }
     pub async fn delete(&self, user_id: i64) -> Result<(), UserRepoError> {
-        let result = self.repo.delete_user(&DB_POOL, user_id).await;
+        let result = self.repo.delete_user(&self.db, user_id).await;
 
         match result {
             Ok(_) => Ok(()),
