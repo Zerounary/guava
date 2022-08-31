@@ -2,7 +2,7 @@
 
 use serde::Serialize;
 
-#[derive(Debug, Default, Serialize, sqlx::FromRow)]
+#[derive(Debug, Default, Clone, Serialize, sqlx::FromRow)]
 pub struct UserBO {
     pub id: i64,
     pub username: String,

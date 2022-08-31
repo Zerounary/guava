@@ -1,6 +1,7 @@
+use cached::proc_macro::cached;
 use serde::Deserialize;
 
-use crate::entities::UserBO;
+use crate::{entities::UserBO, repository::Repository, drivers::db::DB};
 
 use super::Service;
 
@@ -26,15 +27,23 @@ pub struct UpdateUserInput {
     pub done: bool,
 }
 
-impl Service {
-    pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
-        //unimplemented!()
-        let user = self.repo.find_user(&self.db, _user_id).await;
+#[cached(
+    key = "String",
+    result = true,
+    convert = r#"{ format!("{}", id) }"#
+)]
+async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRepoError> {
+    let user = repo.find_user(db, id).await;
+    match user {
+        Ok(user) => Ok(user),
+        Err(_e) => Err(UserRepoError::NotFound),
+    }
+}
 
-        match user {
-            Ok(user) => Ok(user),
-            Err(_e) => Err(UserRepoError::NotFound),
-        }
+impl Service {
+
+    pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+        user_find(&self.repo, &self.db, _user_id).await
     }
 
     pub async fn create(&self, input: CreateUserInput) -> Result<UserBO, UserRepoError> {
