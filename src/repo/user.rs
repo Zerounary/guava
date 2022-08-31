@@ -64,10 +64,9 @@ impl UserRepo for ExampleUserRepo {
 
         match user {
             Ok(user) => Ok(user),
-            Err(e) => {
+            Err(_e) => {
                 Err(UserRepoError::NotFound)
             }
-            _ => Err(UserRepoError::NotFound),
         }
     }
 
@@ -90,7 +89,7 @@ impl UserRepo for ExampleUserRepo {
             
             match result {
                 Ok(_) => self.find(user_id).await,
-                Err(e) => {
+                Err(_e) => {
                     Err(UserRepoError::NotFound)
                 }
             }
@@ -103,7 +102,7 @@ impl UserRepo for ExampleUserRepo {
 
         match result {
             Ok(_) => Ok(()),
-            Err(e) => {
+            Err(_e) => {
                 Err(UserRepoError::NotFound)
             }
         }
@@ -125,7 +124,7 @@ RETURNING id
 }
 
 async fn find_user(pool: &PgPool, id: i64) -> Result<User, sqlx::Error> {
-    let mut user = sqlx::query_as!(User,"SELECT * FROM users WHERE id = $1", id)
+    let user = sqlx::query_as!(User,"SELECT * FROM users WHERE id = $1", id)
         .fetch_one(pool)
         .await?;
 

@@ -3,12 +3,10 @@ mod repo;
 mod db;
 
 use std::{net::SocketAddr, sync::Arc, env};
-use anyhow::Context;
 use repo::user::{DynUserRepo, User, CreateUser, UpdateUser};
-use serde_json::{Value, json};
+use serde_json::{json};
 use axum::{response::{Json, IntoResponse}, routing::{get, post}, Router, extract::Path, Extension, http::StatusCode};
-use sqlx::{migrate::MigrateDatabase};
-use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DB_POOL, DATABASE_URL, DB}};
+use crate::{error::AppError, repo::user::ExampleUserRepo, db::{DATABASE_URL, DB}};
 
 
 #[tokio::main]
@@ -79,7 +77,7 @@ async fn users_create(
 async fn users_delete(Path(id): Path<i64>, Extension(user_repo): Extension<DynUserRepo>) -> impl IntoResponse {
     match user_repo.delete(id).await {
         Ok(_) => StatusCode::OK,
-        Err(e) => StatusCode::NOT_FOUND,
+        Err(_e) => StatusCode::NOT_FOUND,
     } 
 }
 

@@ -1,4 +1,4 @@
-use axum::{body::Full, response::{IntoResponse, Response}, http::StatusCode, Json};
+use axum::{response::{IntoResponse, Response}, http::StatusCode, Json};
 use serde_json::json;
 
 use crate::repo::user::UserRepoError;
