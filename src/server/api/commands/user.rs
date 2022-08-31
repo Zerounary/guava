@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use crate::error::AppError;
+use crate::server::error::AppError;
 use crate::{
     server::api::model::{CreateUserVO, UpdateUserVO, UserVO},
     service::uesr_service::{CreateUserInput, UpdateUserInput},

@@ -1,6 +1,5 @@
 pub mod drivers;
 pub mod entities;
-pub mod error;
 pub mod repository;
 pub mod server;
 pub mod service;
