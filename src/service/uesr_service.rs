@@ -1,4 +1,4 @@
-use cached::proc_macro::cached;
+// use cached::proc_macro::cached;
 use serde::Deserialize;
 
 use crate::{entities::UserBO, repository::Repository, drivers::db::DB};
@@ -6,7 +6,7 @@ use crate::{entities::UserBO, repository::Repository, drivers::db::DB};
 use super::Service;
 
 // 业务错误
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum UserRepoError {
     #[allow(dead_code)]
     NotFound,
@@ -27,11 +27,11 @@ pub struct UpdateUserInput {
     pub done: bool,
 }
 
-#[cached(
-    key = "String",
-    result = true,
-    convert = r#"{ format!("{}", id) }"#
-)]
+// #[cached(
+//     key = "String",
+//     result = true,
+//     convert = r#"{ format!("{}", id) }"#
+// )]
 async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRepoError> {
     let user = repo.find_user(db, id).await;
     match user {
@@ -43,7 +43,14 @@ async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRe
 impl Service {
 
     pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
-        user_find(&self.repo, &self.db, _user_id).await
+        match self.cache.get(&_user_id)  {
+            Some(cached_data) => cached_data,
+            None => {
+                let result = user_find(&self.repo, &self.db, _user_id).await;
+                self.cache.insert(_user_id, result);
+                self.cache.get(&_user_id).unwrap()
+            }
+        }
     }
 
     pub async fn create(&self, input: CreateUserInput) -> Result<UserBO, UserRepoError> {
@@ -71,7 +78,10 @@ impl Service {
         let result = self.repo.update_user(&self.db, user).await;
 
         match result {
-            Ok(_) => self.find(input.id).await,
+            Ok(_) => {
+                self.cache.invalidate(&input.id);
+                self.find(input.id).await
+            },
             Err(_e) => Err(UserRepoError::NotFound),
         }
     }
@@ -79,7 +89,10 @@ impl Service {
         let result = self.repo.delete_user(&self.db, user_id).await;
 
         match result {
-            Ok(_) => Ok(()),
+            Ok(_) => {
+                self.cache.invalidate(&user_id);
+                Ok(())
+            },
             Err(_e) => Err(UserRepoError::NotFound),
         }
     }

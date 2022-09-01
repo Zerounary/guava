@@ -23,5 +23,6 @@ lazy_static = "1.4.0"
 dotenv = { version = "0.15.0"}
 
 cached = "0.38.0"
+moka = "0.9.3"
 
 sqlx = { version = "0.6.1", features = ["runtime-tokio-rustls", "migrate", "any", "postgres"] }
