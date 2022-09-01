@@ -47,8 +47,8 @@ impl Service {
             Some(cached_data) => cached_data,
             None => {
                 let result = user_find(&self.repo, &self.db, _user_id).await;
-                self.cache.insert(_user_id, result);
-                self.cache.get(&_user_id).unwrap()
+                self.cache.insert(_user_id, result.clone());
+                result
             }
         }
     }
@@ -79,7 +79,6 @@ impl Service {
 
         match result {
             Ok(_) => {
-                // BUG 高并发下，会删除 find 方法 刚刚插入的查询值
                 self.cache.invalidate(&input.id);
                 self.find(input.id).await
             },
