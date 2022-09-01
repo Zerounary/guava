@@ -79,6 +79,7 @@ impl Service {
 
         match result {
             Ok(_) => {
+                // BUG 高并发下，会删除 find 方法 刚刚插入的查询值
                 self.cache.invalidate(&input.id);
                 self.find(input.id).await
             },
