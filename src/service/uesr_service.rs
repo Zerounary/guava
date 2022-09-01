@@ -42,6 +42,10 @@ async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRe
 
 impl Service {
 
+    pub async fn find_no_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+        user_find(&self.repo, &self.db, _user_id).await
+    }
+    
     pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
         match self.cache.get(&_user_id)  {
             Some(cached_data) => cached_data,

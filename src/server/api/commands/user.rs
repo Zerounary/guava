@@ -13,6 +13,15 @@ use axum::{
     Extension,
 };
 
+pub async fn users_show_no_cache(
+    Path(user_id): Path<i64>,
+    Extension(state): Extension<Arc<AppState>>,
+) -> Result<Json<UserVO>, AppError> {
+    let user = state.service.find_no_cache(user_id).await?;
+
+    Ok(Json(user.into()))
+}
+
 pub async fn users_show(
     Path(user_id): Path<i64>,
     Extension(state): Extension<Arc<AppState>>,
