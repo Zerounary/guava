@@ -5,7 +5,7 @@ pub mod server;
 pub mod service;
 
 use crate::{
-    drivers::db::{DBOptions, DATABASE_URL},
+    drivers::db::{DBOptions, DATABASE_URL, MAX_CONNECTIONS},
     server::api::commands::{
         hello::hello_world,
         user::{users_create, users_delete, users_show, users_update},
@@ -27,7 +27,7 @@ async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
 
     let db = DBOptions::new()
-        .max_connections(20)
+        .max_connections(MAX_CONNECTIONS.as_str().parse().unwrap())
         .connect(DATABASE_URL.as_str())
         .await?;
 
