@@ -8,7 +8,7 @@ use crate::{
     drivers::db::{DBOptions, DATABASE_URL, MAX_CONNECTIONS},
     server::api::commands::{
         hello::hello_world,
-        user::{users_create, users_delete, users_show, users_update, users_show_no_cache},
+        user::{users_create, users_delete, users_show, users_update, users_show_no_cache, users_show_cache},
     },
     service::Service,
 };
@@ -43,6 +43,7 @@ async fn main() -> anyhow::Result<()> {
     let app = Router::new()
         .route("/", get(hello_world))
         .route("/users/no_cache/:id", get(users_show_no_cache))
+        .route("/users/cache/:id", get(users_show_cache))
         .route(
             "/users/:id",
             get(users_show).delete(users_delete).patch(users_update),

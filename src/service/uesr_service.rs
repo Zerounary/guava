@@ -1,7 +1,7 @@
 // use cached::proc_macro::cached;
 use serde::Deserialize;
 
-use crate::{entities::UserBO, repository::Repository, drivers::db::DB};
+use crate::{entities::UserBO, repository::Repository, drivers::{db::DB, cache::ServiceResult}, cache_value, cache};
 
 use super::Service;
 
@@ -48,11 +48,26 @@ impl Service {
     
     pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
         match self.cache.get(&_user_id)  {
-            Some(cached_data) => cached_data,
+            Some(e) => {
+                let x = cache_value!(e as Result<UserBO, UserRepoError>);
+                x
+            },
             None => {
                 let result = user_find(&self.repo, &self.db, _user_id).await;
-                self.cache.insert(_user_id, result.clone());
+                self.cache.insert(_user_id, ServiceResult::UserBO(result.clone()));
                 result
+            }
+        }
+    }
+
+    pub async fn find_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+        cache!{
+            self(_user_id) -> Result<UserBO, UserRepoError> {
+                let user = self.repo.find_user(&self.db, _user_id).await;
+                match user {
+                    Ok(user) => Ok(user),
+                    Err(_e) => Err(UserRepoError::NotFound),
+                }
             }
         }
     }

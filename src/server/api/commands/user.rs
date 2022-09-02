@@ -22,6 +22,15 @@ pub async fn users_show_no_cache(
     Ok(Json(user.into()))
 }
 
+pub async fn users_show_cache(
+    Path(user_id): Path<i64>,
+    Extension(state): Extension<Arc<AppState>>,
+) -> Result<Json<UserVO>, AppError> {
+    let user = state.service.find_cache(user_id).await?;
+
+    Ok(Json(user.into()))
+}
+
 pub async fn users_show(
     Path(user_id): Path<i64>,
     Extension(state): Extension<Arc<AppState>>,

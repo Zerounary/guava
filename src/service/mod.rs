@@ -2,9 +2,7 @@ use std::sync::{Arc};
 
 use moka::sync::Cache;
 
-use crate::{repository::Repository, drivers::db::DB, entities::UserBO};
-
-use self::uesr_service::UserRepoError;
+use crate::{repository::Repository, drivers::{db::DB, cache::{ServiceCache}}};
 
 pub mod uesr_service;
 
@@ -12,7 +10,7 @@ pub mod uesr_service;
 pub struct Service {
     repo: Repository,
     db: DB, // 为了调用事物
-    cache: Arc<Cache<i64, Result<UserBO, UserRepoError>>> 
+    cache: ServiceCache
 }
 
 impl Service {
