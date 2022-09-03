@@ -8,7 +8,7 @@ use crate::{
     drivers::db::{DBOptions, DATABASE_URL, MAX_CONNECTIONS},
     server::api::commands::{
         hello::hello_world,
-        user::{users_create, users_delete, users_show, users_update, users_show_no_cache, users_show_cache},
+        user::{create_user, delete_user, find_user_by_id, update_user, find_user_by_id_no_cache,},
     },
     service::Service,
 };
@@ -42,13 +42,13 @@ async fn main() -> anyhow::Result<()> {
     // build our application with a route
     let app = Router::new()
         .route("/", get(hello_world))
-        .route("/users/no_cache/:id", get(users_show_no_cache))
-        .route("/users/cache/:id", get(users_show_cache))
+        .route("/users/no_cache/:id", get(find_user_by_id_no_cache))
+        .route("/users/cache/:id", get(find_user_by_id))
         .route(
             "/users/:id",
-            get(users_show).delete(users_delete).patch(users_update),
+            get(find_user_by_id).delete(delete_user).patch(update_user),
         )
-        .route("/users", post(users_create))
+        .route("/users", post(create_user))
         .layer(Extension(service));
 
     // run it

@@ -42,25 +42,11 @@ async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRe
 
 impl Service {
 
-    pub async fn find_no_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+    pub async fn find_user_by_id_no_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
         user_find(&self.repo, &self.db, _user_id).await
     }
     
-    pub async fn find(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
-        match self.cache.get(&_user_id)  {
-            Some(e) => {
-                let x = cache_value!(e as Result<UserBO, UserRepoError>);
-                x
-            },
-            None => {
-                let result = user_find(&self.repo, &self.db, _user_id).await;
-                self.cache.insert(_user_id, ServiceResult::UserBO(result.clone()));
-                result
-            }
-        }
-    }
-
-    pub async fn find_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+    pub async fn find_user_by_id(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
         cache!{
             self(_user_id) -> Result<UserBO, UserRepoError> {
                 let user = self.repo.find_user(&self.db, _user_id).await;
@@ -72,7 +58,7 @@ impl Service {
         }
     }
 
-    pub async fn create(&self, input: CreateUserInput) -> Result<UserBO, UserRepoError> {
+    pub async fn create_user(&self, input: CreateUserInput) -> Result<UserBO, UserRepoError> {
         let user = UserBO {
             username: input.username,
             ..UserBO::default()
@@ -80,7 +66,7 @@ impl Service {
         let user_id = self.repo.create_user(&self.db, user).await;
 
         match user_id {
-            Ok(id) => self.find(id).await,
+            Ok(id) => self.find_user_by_id(id).await,
             Err(e) => {
                 dbg!(e);
                 Err(UserRepoError::NotFound)
@@ -88,7 +74,7 @@ impl Service {
         }
     }
 
-    pub async fn update(&self, input: UpdateUserInput) -> Result<UserBO, UserRepoError> {
+    pub async fn update_user(&self, input: UpdateUserInput) -> Result<UserBO, UserRepoError> {
         let user = UserBO {
             id: input.id,
             username: input.username,
@@ -99,12 +85,12 @@ impl Service {
         match result {
             Ok(_) => {
                 self.cache.invalidate(&input.id);
-                self.find(input.id).await
+                self.find_user_by_id(input.id).await
             },
             Err(_e) => Err(UserRepoError::NotFound),
         }
     }
-    pub async fn delete(&self, user_id: i64) -> Result<(), UserRepoError> {
+    pub async fn delete_user(&self, user_id: i64) -> Result<(), UserRepoError> {
         let result = self.repo.delete_user(&self.db, user_id).await;
 
         match result {

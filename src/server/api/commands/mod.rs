@@ -43,3 +43,63 @@ pub fn resp_err(code: i32, msg: String) -> Json<Resp<Empty>> {
 }
 
 // TODO 编写 宏 来收敛重复的代码
+#[macro_export]
+macro_rules! read {
+    ($service_fn:ident -> $vo:ty) => {
+        pub async fn $service_fn(
+            Path(id): Path<i64>,
+            Extension(state): State,
+        ) -> AppResult<$vo> {
+            let res = state.service.$service_fn(id).await?;
+
+            Resp::ok(res.into())
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! create {
+    ($req_vo:ident -> $service_fn:ident ( $service_input:ident)  -> $res_vo:ident) => {
+        pub async fn $service_fn(
+            Json(params): Json<$req_vo>,
+            Extension(state): State,
+        ) -> AppResult<$res_vo> {
+            let service_input: $service_input = params.into() ;
+            let user = state.service.$service_fn(service_input).await?;
+
+            Resp::ok(user.into())
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! update {
+    ($req_vo:ident -> $service_fn:ident ( $service_input:ident)  -> $res_vo:ident) => {
+        pub async fn $service_fn(
+            Path(id): Path<i64>,
+            Json(mut params): Json<$req_vo>,
+            Extension(state): State,
+        ) -> AppResult<$res_vo> {
+            params.id = Some(id);
+            let service_input: $service_input = params.into();
+            let user = state.service.update_user(service_input).await?;
+            Resp::ok(user.into())
+        }
+    };
+}
+
+
+#[macro_export]
+macro_rules! delete {
+    ( $service_fn:ident ) => {
+        pub async fn $service_fn(
+            Path(id): Path<i64>,
+            Extension(state): State
+        ) -> impl IntoResponse {
+            match state.service.$service_fn(id).await {
+                Ok(_) => StatusCode::OK,
+                Err(_e) => StatusCode::NOT_FOUND,
+            }
+        }
+    };
+}
