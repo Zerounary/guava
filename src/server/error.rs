@@ -1,11 +1,11 @@
 use axum::{
     http::StatusCode,
     response::{IntoResponse, Response},
-    Json,
 };
-use serde_json::json;
 
 use crate::service::uesr_service::UserRepoError;
+
+use super::api::commands::resp_err;
 
 pub enum AppError {
     UserRepo(UserRepoError),
@@ -21,18 +21,16 @@ impl From<UserRepoError> for AppError {
 
 impl IntoResponse for AppError {
     fn into_response(self) -> Response {
-        let (status, error_message) = match self {
+        let (status, code, error_message) = match self {
             AppError::UserRepo(UserRepoError::NotFound) => {
-                (StatusCode::NOT_FOUND, "User not found")
+                (StatusCode::NOT_FOUND, 1, "User not found")
             }
             AppError::UserRepo(UserRepoError::InvalidUsername) => {
-                (StatusCode::UNPROCESSABLE_ENTITY, "Invalid username")
+                (StatusCode::UNPROCESSABLE_ENTITY, 2, "Invalid username")
             }
         };
 
-        let body = Json(json!({
-            "error": error_message,
-        }));
+        let body = resp_err(code, error_message.to_string());
 
         (status, body).into_response()
     }
