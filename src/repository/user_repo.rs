@@ -1,5 +1,5 @@
 use rbs::to_value;
-
+use itertools::Itertools;
 use super::Repository;
 use crate::{drivers::db::DB, entities::UserBO};
 
@@ -33,6 +33,17 @@ impl Repository {
 
     pub async fn delete_user(&self, pool: &DB, id: i64) -> Result<(), rbatis::Error> {
         pool.fetch("DELETE FROM users where id = ?", vec![to_value!(id)])
+            .await
+            .unwrap();
+        Ok(())
+    }
+
+    pub async fn delete_user_ids(&self, pool: &DB, ids: Vec<i64>) -> Result<(), rbatis::Error> {
+        if ids.is_empty() {
+            return Ok(())
+        }
+        let sql = format!("DELETE FROM users where id in ({})", ids.iter().join(","));
+        pool.fetch(sql.as_str(), vec![])
             .await
             .unwrap();
         Ok(())

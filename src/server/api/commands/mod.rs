@@ -93,10 +93,11 @@ macro_rules! update {
 macro_rules! delete {
     ( $service_fn:ident ) => {
         pub async fn $service_fn(
-            Path(id): Path<i64>,
+            Path(ids): Path<String>,
             Extension(state): State
         ) -> impl IntoResponse {
-            match state.service.$service_fn(id).await {
+            let ids: Vec<i64> = ids.split(",").into_iter().map(|x| x.trim().parse().unwrap_or(-1)).collect();
+            match state.service.$service_fn(ids).await {
                 Ok(_) => StatusCode::OK,
                 Err(_e) => StatusCode::NOT_FOUND,
             }

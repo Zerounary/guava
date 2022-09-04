@@ -101,4 +101,17 @@ impl Service {
             Err(_e) => Err(UserRepoError::NotFound),
         }
     }
+    pub async fn delete_user_ids(&self, ids: Vec<i64>) -> Result<(), UserRepoError> {
+        let result = self.repo.delete_user_ids(&self.db, ids.clone()).await;
+
+        match result {
+            Ok(_) => {
+                for id in ids {
+                    self.cache.invalidate(&id);
+                }
+                Ok(())
+            },
+            Err(_e) => Err(UserRepoError::NotFound),
+        }
+    }
 }

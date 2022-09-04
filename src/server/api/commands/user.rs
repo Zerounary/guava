@@ -19,4 +19,4 @@ create!(CreateUserVO -> create_user(CreateUserInput)  -> UserVO);
 
 update!(UpdateUserVO -> update_user(UpdateUserInput) -> UserVO);
 
-delete!(delete_user);
+delete!(delete_user_ids);
