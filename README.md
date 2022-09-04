@@ -8,8 +8,12 @@ axum + rbatis
 
 # Dev steps
 
-1. add vo in server/api/model.rs
-2. 
+update
+
+1. add req_vo and res_vo in server/api/model.rs
+2. add input in service/$name_service.rs
+3. add service_fn in service/$name_service.rs
+4. add repo_fn in service/$name_repo.rs
 
 
 # performance
