@@ -26,7 +26,7 @@ impl Repository {
             .await;
 
         match result {
-            Ok(userBO) => Ok(userBO),
+            Ok(uesr_bo) => Ok(uesr_bo),
             Err(_) => Err(rbatis::Error::E("Not Found!".to_string()))
         }
     }

@@ -42,14 +42,14 @@ async fn user_find(repo: &Repository, db: &DB, id: i64) -> Result<UserBO, UserRe
 
 impl Service {
 
-    pub async fn find_user_by_id_no_cache(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
-        user_find(&self.repo, &self.db, _user_id).await
+    pub async fn find_user_by_id_no_cache(&self, user_id: i64) -> Result<UserBO, UserRepoError> {
+        user_find(&self.repo, &self.db, user_id).await
     }
     
-    pub async fn find_user_by_id(&self, _user_id: i64) -> Result<UserBO, UserRepoError> {
+    pub async fn find_user_by_id(&self, user_id: i64) -> Result<UserBO, UserRepoError> {
         cache!{
-            self(_user_id) -> Result<UserBO, UserRepoError> {
-                let user = self.repo.find_user(&self.db, _user_id).await;
+            self(user_id) -> Result<UserBO, UserRepoError> {
+                let user = self.repo.find_user(&self.db, user_id).await;
                 match user {
                     Ok(user) => Ok(user),
                     Err(_e) => Err(UserRepoError::NotFound),
