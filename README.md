@@ -4,6 +4,8 @@ A clean architecture web framework base on axum. A fast development framework to
 
 refer to [rust web application clean architecture](https://kerkour.com/rust-web-application-clean-architecture)
 
+axum + rbatis
+
 # Dev steps
 
 1. add vo in server/api/model.rs
@@ -25,4 +27,4 @@ delete: 8000+/qps
 
 sample query with cache
 
-query
+query: 58000+/qps
