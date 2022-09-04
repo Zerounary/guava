@@ -1,8 +1,8 @@
 // 业务的实体
 
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Default, Clone, Serialize, sqlx::FromRow)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct UserBO {
     pub id: i64,
     pub username: String,

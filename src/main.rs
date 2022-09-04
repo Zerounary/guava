@@ -8,7 +8,7 @@ use crate::{
     drivers::db::{DBOptions, DATABASE_URL, MAX_CONNECTIONS},
     server::api::commands::{
         hello::hello_world,
-        user::{create_user, delete_user, find_user_by_id, update_user, find_user_by_id_no_cache,},
+        user::{create_user, delete_user, find_user_by_id, find_user_by_id_no_cache, update_user},
     },
     service::Service,
 };
@@ -16,6 +16,8 @@ use axum::{
     routing::{get, post},
     Extension, Router,
 };
+use rbatis::Rbatis;
+use rbdc_pg::{driver::PgDriver, options::PgConnectOptions};
 use std::{env, net::SocketAddr, sync::Arc};
 
 pub struct AppState {
@@ -26,12 +28,16 @@ pub struct AppState {
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
 
-    let db = DBOptions::new()
-        .max_connections(MAX_CONNECTIONS.as_str().parse().unwrap())
-        .connect(DATABASE_URL.as_str())
-        .await?;
+    // let db = DBOptions::new()
+    //     .max_connections(MAX_CONNECTIONS.as_str().parse().unwrap())
+    //     .connect(DATABASE_URL.as_str())
+    //     .await?;
 
-    sqlx::migrate!().run(&db).await?;
+    // sqlx::migrate!().run(&db).await?;
+
+    let db = Rbatis::new();
+
+    db.init(PgDriver {}, DATABASE_URL.as_str()).unwrap();
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.

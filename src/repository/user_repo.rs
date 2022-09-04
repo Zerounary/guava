@@ -1,51 +1,57 @@
+use rbs::to_value;
+
 use super::Repository;
 use crate::{drivers::db::DB, entities::UserBO};
 
 impl Repository {
-    pub async fn create_user(&self, pool: &DB, user: UserBO) -> Result<i64, sqlx::Error> {
-        let rec = sqlx::query!(
-            "
-  INSERT INTO users ( username )
-  VALUES ( $1 )
-  RETURNING id
-          ",
-            user.username
-        )
-        .fetch_one(pool)
-        .await?;
-        Ok(rec.id)
+    pub async fn create_user(&self, pool: &DB, user: UserBO) -> Result<i64, rbatis::Error> {
+        let id: i64 = pool
+            .fetch_decode(
+                "
+          INSERT INTO users ( username )
+            VALUES ( ? )
+            RETURNING id
+        ",
+                vec![to_value!(user.username)],
+            )
+            .await
+            .unwrap();
+
+        Ok(id)
     }
 
-    pub async fn find_user(&self, pool: &DB, id: i64) -> Result<UserBO, sqlx::Error> {
-        let user = sqlx::query_as!(UserBO, "SELECT * FROM users WHERE id = $1", id)
-            .fetch_one(pool)
-            .await?;
+    pub async fn find_user(&self, pool: &DB, id: i64) -> Result<UserBO, rbatis::Error> {
+        let result = pool
+            .fetch_decode("SELECT * FROM users WHERE id = ?", vec![to_value!(id)])
+            .await;
 
-        Ok(user)
+        match result {
+            Ok(userBO) => Ok(userBO),
+            Err(_) => Err(rbatis::Error::E("Not Found!".to_string()))
+        }
     }
 
-    pub async fn delete_user(&self, pool: &DB, id: i64) -> Result<(), sqlx::Error> {
-        let _result = sqlx::query!("DELETE FROM users where id = $1", id)
-            .execute(pool)
-            .await?;
+    pub async fn delete_user(&self, pool: &DB, id: i64) -> Result<(), rbatis::Error> {
+        pool.fetch("DELETE FROM users where id = ?", vec![to_value!(id)])
+            .await
+            .unwrap();
         Ok(())
     }
 
-    pub async fn update_user(&self, pool: &DB, user: UserBO) -> Result<(), sqlx::Error> {
+    pub async fn update_user(&self, pool: &DB, user: UserBO) -> Result<(), rbatis::Error> {
         let id = user.id;
-        let _result = sqlx::query!(
-            "UPDATE users SET username = $1 where id = $2",
-            user.username,
-            id
-        )
-        .execute(pool)
-        .await?
-        .rows_affected();
+        let _result = pool
+            .exec(
+                "UPDATE users SET username = ? where id = ?",
+                vec![to_value!(user.username), to_value!(id)],
+            )
+            .await
+            .unwrap();
 
-        if _result > 0 {
+        if _result.rows_affected > 0 {
             Ok(())
         } else {
-            Err(sqlx::Error::RowNotFound)
+            Err(rbatis::Error::E("Not found".to_string()))
         }
     }
 }

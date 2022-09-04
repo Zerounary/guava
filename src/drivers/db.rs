@@ -1,11 +1,12 @@
 use std::env;
 
 use lazy_static::lazy_static;
-use sqlx::postgres::{PgPool, PgPoolOptions};
+use rbatis::Rbatis;
+use rbdc_pg::options::PgConnectOptions;
 
 // alias DB pool type
-pub type DB = PgPool;
-pub type DBOptions = PgPoolOptions;
+pub type DB = Rbatis;
+pub type DBOptions = PgConnectOptions;
 
 lazy_static! {
         // connect database
