@@ -80,7 +80,7 @@ impl Service {
             username: input.username,
             done: input.done,
         };
-        let result = self.repo.update_user(&self.db, user).await;
+        let result = self.repo.update_user_by_id(&self.db, &user, user.id).await;
 
         match result {
             Ok(_) => {
