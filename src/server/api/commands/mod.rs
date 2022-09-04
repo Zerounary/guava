@@ -59,12 +59,23 @@ macro_rules! read {
 
 #[macro_export]
 macro_rules! create {
-    ($req_vo:ident -> $service_fn:ident ( $service_input:ident)  -> $res_vo:ident) => {
+    ($req_vo:ident > $service_fn:ident ( $service_input:ident)  > $res_vo:ident) => {
         pub async fn $service_fn(
             Json(params): Json<$req_vo>,
             Extension(state): State,
         ) -> AppResult<$res_vo> {
-            let service_input: $service_input = params.into() ;
+            let service_input: $service_input = params.into();
+            let user = state.service.$service_fn(service_input).await?;
+
+            Resp::ok(user.into())
+        }
+    };
+    (Vec<$req_vo:ident> > $service_fn:ident (Vec<$service_input:ident>)  > Vec<$res_vo:ident>) => {
+        pub async fn $service_fn(
+            Json(mut params): Json<Vec<$req_vo>>,
+            Extension(state): State,
+        ) -> AppResult<Vec<$res_vo>> {
+            let service_input: Vec<$service_input> = params.iter().map(|x| x.into()).collect();
             let user = state.service.$service_fn(service_input).await?;
 
             Resp::ok(user.into())

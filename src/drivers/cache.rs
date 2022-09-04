@@ -1,7 +1,7 @@
 use moka::sync::Cache;
 use std::sync::Arc;
 
-use crate::{entities::UserBO, service::uesr_service::UserRepoError};
+use crate::{entities::UserBO, service::user_service::UserRepoError};
 
 #[derive(Debug, Clone)]
 pub enum ServiceResult {

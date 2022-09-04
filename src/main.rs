@@ -8,7 +8,7 @@ use crate::{
     drivers::db::{DATABASE_URL},
     server::api::commands::{
         hello::hello_world,
-        user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user},
+        user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch},
     },
     service::Service,
 };
@@ -38,6 +38,9 @@ async fn main() -> anyhow::Result<()> {
     let db = Rbatis::new();
 
     db.init(PgDriver {}, DATABASE_URL.as_str()).unwrap();
+    fast_log::init(fast_log::Config::new().console()).expect("rbatis init fail");
+
+    // db.log_plugin.set_level(log::Level::Info, log::Level::Debug);
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
@@ -55,6 +58,7 @@ async fn main() -> anyhow::Result<()> {
             get(find_user_by_id).delete(delete_user_ids).patch(update_user),
         )
         .route("/users", post(create_user))
+        .route("/users/batch", post(create_user_batch))
         .layer(Extension(service));
 
     // run it

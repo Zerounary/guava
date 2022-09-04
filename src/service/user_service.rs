@@ -74,6 +74,24 @@ impl Service {
         }
     }
 
+    pub async fn create_user_batch(&self, mut input: Vec<CreateUserInput>) -> Result<Vec<i64>, UserRepoError> {
+        let mut users = input.iter_mut().map(|e| {
+            UserBO {
+                username: e.username.clone(),
+                ..UserBO::default()
+            }
+        }).collect::<Vec<UserBO>>();
+        let result = self.repo.create_user_batch(&self.db, &mut users, 100).await;
+
+        match result {
+            Ok(insert_result) => Ok(insert_result.insert_ids),
+            Err(e) => {
+                dbg!(e);
+                Err(UserRepoError::NotFound)
+            }
+        }
+    }
+
     pub async fn update_user(&self, input: UpdateUserInput) -> Result<UserBO, UserRepoError> {
         let user = UserBO {
             id: input.id,

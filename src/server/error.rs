@@ -3,7 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 
-use crate::service::uesr_service::UserRepoError;
+use crate::service::user_service::UserRepoError;
 
 use super::api::commands::resp_err;
 

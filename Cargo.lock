@@ -466,6 +466,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0206175f82b8d6bf6652ff7d71a1e27fd2e4efde587fd368662814d6ec1d9ce0"
 
 [[package]]
+name = "fast_log"
+version = "1.5.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "818bc62c01bca21b990695ee1d639764b4441db4f61d759819093ccc435bd027"
+dependencies = [
+ "crossbeam",
+ "crossbeam-channel",
+ "crossbeam-utils",
+ "fastdate",
+ "log",
+ "once_cell",
+]
+
+[[package]]
 name = "fastdate"
 version = "0.1.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -637,8 +651,10 @@ dependencies = [
  "axum",
  "cached",
  "dotenv",
+ "fast_log",
  "itertools",
  "lazy_static",
+ "log",
  "moka",
  "rbatis",
  "rbdc-pg",

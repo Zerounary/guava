@@ -1,25 +1,9 @@
 use rbs::to_value;
 use itertools::Itertools;
 use super::Repository;
-use crate::{drivers::db::DB, entities::UserBO, impl_repo_update};
+use crate::{drivers::db::DB, entities::UserBO, impl_repo_update, impl_repo_insert};
 
 impl Repository {
-    pub async fn create_user(&self, pool: &DB, user: UserBO) -> Result<i64, rbatis::Error> {
-        let id: i64 = pool
-            .fetch_decode(
-                "
-          INSERT INTO \"user\" ( username )
-            VALUES ( ? )
-            RETURNING id
-        ",
-                vec![to_value!(user.username)],
-            )
-            .await
-            .unwrap();
-
-        Ok(id)
-    }
-
     pub async fn find_user(&self, pool: &DB, id: i64) -> Result<UserBO, rbatis::Error> {
         let result = pool
             .fetch_decode("SELECT * FROM \"user\" WHERE id = ?", vec![to_value!(id)])
@@ -52,3 +36,5 @@ impl Repository {
 }
 
 impl_repo_update!(UserBO{update_user_by_id(id: i64) => "`where id = #{id}`"});
+
+impl_repo_insert!(UserBO, create_user, create_user_batch);

@@ -4,7 +4,7 @@ use moka::sync::Cache;
 
 use crate::{repository::Repository, drivers::{db::DB, cache::{ServiceCache}}};
 
-pub mod uesr_service;
+pub mod user_service;
 
 #[derive(Debug)]
 pub struct Service {

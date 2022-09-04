@@ -1,7 +1,7 @@
 use crate::{
     create, read,
     server::api::model::{CreateUserVO, UpdateUserVO, UserVO},
-    service::uesr_service::{CreateUserInput, UpdateUserInput}, update, delete,
+    service::user_service::{CreateUserInput, UpdateUserInput}, update, delete,
 };
 use axum::{
     extract::Path,
@@ -15,7 +15,9 @@ use super::{AppResult, Resp, State};
 read!(find_user_by_id -> UserVO);
 read!(find_user_by_id_no_cache -> UserVO);
 
-create!(CreateUserVO -> create_user(CreateUserInput)  -> UserVO);
+create!(CreateUserVO > create_user(CreateUserInput)  > UserVO);
+
+create!(Vec<CreateUserVO> > create_user_batch(Vec<CreateUserInput>) > Vec<i64>);
 
 update!(UpdateUserVO -> update_user(UpdateUserInput) -> UserVO);
 

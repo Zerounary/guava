@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     entities,
-    service::uesr_service::{CreateUserInput, UpdateUserInput},
+    service::user_service::{CreateUserInput, UpdateUserInput},
 };
 
 #[derive(Debug, Deserialize)]
@@ -10,10 +10,18 @@ use crate::{
 pub struct CreateUserVO {
     pub username: String,
 }
-impl Into<CreateUserInput> for CreateUserVO {
-    fn into(self) -> CreateUserInput {
+impl From<CreateUserVO> for CreateUserInput {
+    fn from(s: CreateUserVO) -> Self {
         CreateUserInput {
-            username: self.username,
+            username: s.username,
+        }
+    }
+}
+
+impl From<&CreateUserVO> for CreateUserInput {
+    fn from(s: &CreateUserVO) -> Self {
+        CreateUserInput {
+            username: s.username.clone(),
         }
     }
 }

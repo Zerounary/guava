@@ -59,3 +59,152 @@ macro_rules! impl_repo_update {
         }
     };
 }
+
+
+#[derive(Debug, Default)]
+pub struct InsertBatchResult {
+   pub rows_affected: u64,
+   pub insert_ids: Vec<i64>,
+}   
+
+#[macro_export]
+macro_rules! impl_repo_insert {
+    ($table:ty, $insert_fn:ident, $insert_batch_fn:ident) => {
+        impl_repo_insert!(
+            $table,
+            $insert_fn,
+            $insert_batch_fn,
+            rbatis::utils::string_util::to_snake_name(stringify!($table)).trim_end_matches("_bo")
+        );
+    };
+    ($table:ty, $insert_fn:ident, $insert_batch_fn:ident, $table_name:expr) => {
+        impl Repository {
+            pub async fn $insert_batch_fn (
+                &self,
+                mut rb: &DB,
+                tables: &mut [$table],
+                batch_size: u64,
+            ) -> Result<crate::repository::InsertBatchResult, rbatis::rbdc::Error> {
+                #[rbatis::py_sql(
+                    "`insert into \"${table_name}\" (`
+             trim ',':
+               for k,v in tables[0]:
+                  if k == 'id' && v== null:
+                    continue:
+                 ${k},
+             `) VALUES `
+             trim ',':
+              for _,table in tables:
+               (
+               trim ',':
+                for k,v in table:
+                  if k == 'id' && v== null:
+                     continue:
+                  #{v},
+               ),
+             "
+                )]
+                async fn insert_batch(
+                    rb: &mut dyn rbatis::executor::Executor,
+                    tables: &[$table],
+                    table_name: &str,
+                ) -> Result<rbatis::rbdc::db::ExecResult, rbatis::rbdc::Error> {
+                    impled!()
+                }
+                if tables.is_empty() {
+                    return Err(rbatis::rbdc::Error::from(
+                        "insert can not insert empty array tables!",
+                    ));
+                }
+                let mut insert_ids = Vec::new();
+                for table in tables.iter_mut() {
+                    let id = rbatis::plugin::snowflake::new_snowflake_id();
+                    table.id = id;
+                    insert_ids.push(id);
+                }
+                let table_name = $table_name.to_string();
+                let mut result = rbatis::rbdc::db::ExecResult {
+                    rows_affected: 0,
+                    last_insert_id: rbs::Value::Null,
+                };
+                let ranges = rbatis::sql::Page::<()>::into_ranges(tables.len() as u64, batch_size);
+                for (offset, limit) in ranges {
+                    let exec_result = insert_batch(
+                        &mut rb,
+                        &tables[offset as usize..limit as usize],
+                        table_name.as_str(),
+                    )
+                    .await?;
+                    result.rows_affected += exec_result.rows_affected;
+                    result.last_insert_id = exec_result.last_insert_id;
+                }
+
+                Ok(crate::repository::InsertBatchResult {
+                    rows_affected: result.rows_affected,
+                    insert_ids
+                })
+            }
+
+        }
+
+        impl Repository {
+            pub async fn $insert_fn(
+                    &self,
+                    mut rb: &DB,
+                    mut table: $table,
+                ) -> Result<i64, rbatis::Error> {
+                    let result = self.$insert_batch_fn(rb, &mut [table.clone()], 1).await;
+                    match result {
+                        Ok(insert_result) => {
+                            let id = insert_result.insert_ids[0];
+                            Ok(id)
+                        },
+                        Err(_e) => {
+                            Err(rbatis::Error::E("Not found".to_string()))
+                        }
+                    }
+            }
+        }
+    };
+}
+
+#[derive(Debug)]
+struct A {
+    id: i64
+}
+
+#[derive(Debug)]
+struct B {
+    id: i64
+}
+
+impl From<&A> for B {
+    fn from(a: &A) -> Self {
+        B {
+            id: a.id
+        }
+    }
+}
+
+// impl Into<B> for A {
+//     fn into(self) -> B {
+//         B {
+//             id: self.id
+//         }
+//     }
+// }
+
+#[test]
+fn test() {
+    let mut arr = vec![A{id: 0}, A{id: 0}];
+
+    let brr: Vec<B> = arr.iter().map(|x| {
+        // B::from(x)
+        x.into()
+    }).collect();
+
+    for e in arr.iter_mut() {
+        e.id = 3;
+    }
+    println!("{:?}", arr);
+}
