@@ -5,7 +5,7 @@ pub mod server;
 pub mod service;
 
 use crate::{
-    drivers::db::{DBOptions, DATABASE_URL, MAX_CONNECTIONS},
+    drivers::db::{DATABASE_URL},
     server::api::commands::{
         hello::hello_world,
         user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user},
@@ -17,7 +17,7 @@ use axum::{
     Extension, Router,
 };
 use rbatis::Rbatis;
-use rbdc_pg::{driver::PgDriver, options::PgConnectOptions};
+use rbdc_pg::{driver::PgDriver};
 use std::{env, net::SocketAddr, sync::Arc};
 
 pub struct AppState {
