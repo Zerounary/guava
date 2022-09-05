@@ -167,3 +167,18 @@ macro_rules! impl_repo_insert {
         }
     };
 }
+
+#[macro_export]
+macro_rules! impl_repo_select {
+    ($table:ty{$fn_name:ident($($param_key:ident:$param_type:ty$(,)?)*) => $sql:expr}) => {
+        impl Repository{
+            pub async fn $fn_name(&self, mut rb: &DB, $($param_key:$param_type,)*)->Result<Vec<$table>, rbatis::rbdc::Error>{
+                   #[rbatis::py_sql("`select ${table_column} from ${table_name} `",$sql)]
+                   async fn $fn_name(rb: &mut dyn rbatis::executor::Executor,table_column:&str,table_name:&str,$($param_key:$param_type,)*) -> Result<Vec<$table>,rbatis::rbdc::Error> {impled!()}
+                   let mut table_column = "*".to_string();
+                   let mut table_name = rbatis::utils::string_util::to_snake_name(stringify!($table));
+                   $fn_name(&mut rb,&table_column,&table_name,$($param_key ,)*).await
+            }
+        }
+    };
+}
