@@ -6,20 +6,6 @@ use itertools::Itertools;
 use rbs::to_value;
 
 impl Repository {
-    pub async fn find_user(&self, pool: &DB, id: i64) -> Result<UserBO, rbatis::Error> {
-        // let result = pool
-        //     .fetch_decode("SELECT * FROM \"user\" WHERE id = ?", vec![to_value!(id)])
-        //     .await;
-
-        let result = self.select_user_by_id(&pool, id).await;
-
-        match result {
-            Ok(bo) => {
-                Ok(bo.to_owned())
-            }
-            Err(_) => Err(rbatis::Error::E("Not Found!".to_string())),
-        }
-    }
 
     pub async fn delete_user(&self, pool: &DB, id: i64) -> Result<(), rbatis::Error> {
         pool.fetch("DELETE FROM \"user\" where id = ?", vec![to_value!(id)])
