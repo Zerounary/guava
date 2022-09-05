@@ -8,7 +8,7 @@ use crate::{
     drivers::db::{DATABASE_URL},
     server::api::commands::{
         hello::hello_world,
-        user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_by_done},
+        user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_list },
     },
     service::Service,
 };
@@ -53,7 +53,7 @@ async fn main() -> anyhow::Result<()> {
         .route("/", get(hello_world))
         .route("/users/no_cache/:id", get(find_user_by_id_no_cache))
         .route("/users/cache/:id", get(find_user_by_id))
-        .route("/users/done", post(find_user_by_done))
+        .route("/users/list", post(find_user_list))
         .route(
             "/users/:id",
             get(find_user_by_id).delete(delete_user_ids).patch(update_user),

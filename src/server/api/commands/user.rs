@@ -1,7 +1,7 @@
 use crate::{
     create, read,
     server::api::model::{CreateUserVO, UpdateUserVO, UserVO, UserOptionVO},
-    service::user_service::{CreateUserInput, UpdateUserInput}, update, delete, entities::UserBO,
+    service::user_service::{CreateUserInput, UpdateUserInput}, update, delete, entities::{UserBO, UserOptionBO},
 };
 use axum::{
     extract::Path,
@@ -15,10 +15,12 @@ use super::{AppResult, Resp, State};
 
 read!(find_user_by_id -> UserVO);
 read!(find_user_by_id_no_cache -> UserVO);
-read!(UserOptionVO > find_user_by_done {
-    fn into(vo: UserOptionVO) -> bool {
-        let done = vo.done.unwrap_or(false);
-        done
+read!(UserOptionVO > find_user_list {
+    fn into(vo: UserOptionVO) -> UserOptionBO {
+        UserOptionBO {
+            username: vo.username,
+            done: vo.done,
+        }
     }
     fn outo(result:Vec<UserBO>) -> Vec<UserVO> {
         result.iter().map(|x| UserVO::from(x)).collect_vec()

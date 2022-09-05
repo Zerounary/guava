@@ -8,3 +8,9 @@ pub struct UserBO {
     pub username: String,
     pub done: bool,
 }
+
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
+pub struct UserOptionBO {
+    pub username: Option<String>,
+    pub done: Option<bool>,
+}

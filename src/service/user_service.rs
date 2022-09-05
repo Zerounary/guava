@@ -1,7 +1,7 @@
 // use cached::proc_macro::cached;
 use serde::Deserialize;
 
-use crate::{entities::UserBO, drivers::{cache::ServiceResult}, cache_value, cache};
+use crate::{entities::{UserBO, UserOptionBO}, drivers::{cache::ServiceResult}, cache_value, cache};
 
 use super::Service;
 
@@ -29,8 +29,8 @@ pub struct UpdateUserInput {
 
 impl Service {
 
-    pub async fn find_user_by_done(&self, done: bool) -> Result<Vec<UserBO>, UserRepoError> {
-        let result = self.repo.select_user_by_done(&self.db, done).await;
+    pub async fn find_user_list(&self, userBO: UserOptionBO) -> Result<Vec<UserBO>, UserRepoError> {
+        let result = self.repo.select_user_list(&self.db, userBO).await;
         match result {
             Ok(user_vec) => Ok(user_vec),
             Err(_e) => Err(UserRepoError::NotFound)
