@@ -84,7 +84,7 @@ macro_rules! create {
     };
     (Vec<$req_vo:ident> > $service_fn:ident (Vec<$service_input:ident>)  > Vec<$res_vo:ident>) => {
         pub async fn $service_fn(
-            Json(mut params): Json<Vec<$req_vo>>,
+            Json(params): Json<Vec<$req_vo>>,
             Extension(state): State,
         ) -> AppResult<Vec<$res_vo>> {
             let service_input: Vec<$service_input> = params.iter().map(|x| x.into()).collect();

@@ -1,8 +1,7 @@
-use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    entities::{self, UserBO},
+    entities::{UserBO},
     service::user_service::{CreateUserInput, UpdateUserInput},
 };
 

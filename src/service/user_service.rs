@@ -29,8 +29,8 @@ pub struct UpdateUserInput {
 
 impl Service {
 
-    pub async fn find_user_list(&self, userBO: UserOptionBO) -> Result<Vec<UserBO>, UserRepoError> {
-        let result = self.repo.select_user_list(&self.db, userBO).await;
+    pub async fn find_user_list(&self, user_bo: UserOptionBO) -> Result<Vec<UserBO>, UserRepoError> {
+        let result = self.repo.select_user_list(&self.db, user_bo).await;
         match result {
             Ok(user_vec) => Ok(user_vec),
             Err(_e) => Err(UserRepoError::NotFound)
