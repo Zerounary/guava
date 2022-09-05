@@ -55,6 +55,16 @@ macro_rules! read {
             Resp::ok(res.into())
         }
     };
+    ($service_fn:ident($( $param_key:ident:$param_type:ident$(,)?)*) -> $vo:ty) => {
+        pub async fn $service_fn(
+            Path(id): Path<i64>,
+            Extension(state): State,
+        ) -> AppResult<$vo> {
+            let res = state.service.$service_fn(id).await?;
+
+            Resp::ok(res.into())
+        }
+    };
 }
 
 #[macro_export]

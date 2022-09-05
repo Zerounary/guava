@@ -29,6 +29,14 @@ pub struct UpdateUserInput {
 
 impl Service {
 
+    pub async fn find_user_by_done(&self, done: bool) -> Result<Vec<UserBO>, UserRepoError> {
+        let result = self.repo.select_user_by_done(&self.db, done).await;
+        match result {
+            Ok(user_vec) => Ok(user_vec),
+            Err(_e) => Err(UserRepoError::NotFound)
+        }
+    }
+
     pub async fn find_user_by_id_no_cache(&self, user_id: i64) -> Result<UserBO, UserRepoError> {
         let user = self.repo.select_user_by_id(&self.db, user_id).await;
         match user {

@@ -1,7 +1,8 @@
+use itertools::Itertools;
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    entities,
+    entities::{self, UserBO},
     service::user_service::{CreateUserInput, UpdateUserInput},
 };
 
@@ -50,11 +51,21 @@ pub struct UserVO {
     pub done: bool,
 }
 
-impl From<entities::UserBO> for UserVO {
-    fn from(user: entities::UserBO) -> Self {
+impl From<UserBO> for UserVO {
+    fn from(user: UserBO) -> Self {
         UserVO {
             id: user.id,
             username: user.username,
+            done: user.done,
+        }
+    }
+}
+
+impl From<&UserBO> for UserVO {
+    fn from(user: &UserBO) -> Self {
+        UserVO {
+            id: user.id,
+            username: user.username.clone(),
             done: user.done,
         }
     }
