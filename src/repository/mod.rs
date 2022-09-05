@@ -180,7 +180,6 @@ macro_rules! impl_repo_select {
                 async fn $fn_name(rb: &mut dyn rbatis::executor::Executor,table_column:&str,table_name:&str,$($param_key:$param_type,)*) -> Result<$container<$table>,rbatis::rbdc::Error> {impled!()}
                 let mut table_column = "*".to_string();
                 let mut table_name = crate::repository::to_sql_table_name(stringify!($table));
-                table_name = table_name.trim_end_matches("_bo").to_string(); // remove suffix _bo
                 $fn_name(&mut rb,&table_column,&table_name,$($param_key ,)*).await
             }
         }
