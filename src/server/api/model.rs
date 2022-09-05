@@ -45,6 +45,13 @@ impl Into<UpdateUserInput> for UpdateUserVO {
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+pub struct UserOptionVO {
+    pub id: Option<i64>,
+    pub username: Option<String>,
+    pub done: Option<bool>,
+}
+
+#[derive(Debug, Default, Serialize, Deserialize)]
 pub struct UserVO {
     pub id: i64,
     pub username: String,

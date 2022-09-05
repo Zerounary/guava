@@ -1,6 +1,6 @@
 use crate::{
     create, read,
-    server::api::model::{CreateUserVO, UpdateUserVO, UserVO},
+    server::api::model::{CreateUserVO, UpdateUserVO, UserVO, UserOptionVO},
     service::user_service::{CreateUserInput, UpdateUserInput}, update, delete,
 };
 use axum::{
@@ -17,15 +17,9 @@ read!(find_user_by_id -> UserVO);
 read!(find_user_by_id_no_cache -> UserVO);
 // read!(find_user_by_done(Path(done): ) -> Vec<UserVO>);
 
-pub async fn find_user_by_done(Json(params): Json<serde_json::Value>, Extension(state): State) -> AppResult<Vec<UserVO>> {
-    let query = params.as_object();
-    let mut done = false;
+pub async fn find_user_by_done(Json(params): Json<UserOptionVO>, Extension(state): State) -> AppResult<Vec<UserVO>> {
 
-    match query {
-        Some(map) => {done = map.get("done").unwrap().as_bool().unwrap_or(false)},
-        _ => {}
-    }
-
+    let done = params.done.unwrap_or(false);
     let result = state.service.find_user_by_done(done).await?;
     let vos = result.iter().map(|x| UserVO::from(x)).collect_vec();
     Resp::ok(vos)
