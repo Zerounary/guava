@@ -49,7 +49,7 @@ impl Service {
     pub async fn find_user_by_id(&self, user_id: i64) -> Result<UserBO, UserRepoError> {
         cache!{
             self(user_id) -> Result<UserBO, UserRepoError> {
-                let user = self.repo.find_user(&self.db, user_id).await;
+                let user = self.repo.select_user_by_id(&self.db, user_id).await;
                 match user {
                     Ok(user) => Ok(user),
                     Err(_e) => Err(UserRepoError::NotFound),

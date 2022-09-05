@@ -9,6 +9,10 @@ impl Repository {
     }
 }
 
+pub fn to_sql_table_name(table_name: &str) -> String {
+    let name = rbatis::utils::string_util::to_snake_name(&table_name).trim_end_matches("_bo").to_string();
+    format!(r#""{}""#, name)
+}
 
 #[macro_export]
 macro_rules! impl_repo_update {
@@ -23,7 +27,7 @@ macro_rules! impl_repo_update {
                 if $sql_where.is_empty(){
                     return Err(rbatis::rbdc::Error::from("sql_where can't be empty!"));
                 }
-                #[rbatis::py_sql("`update \"${table_name}\" set  `
+                #[rbatis::py_sql("`update ${table_name} set  `
                                  trim ',':
                                    for k,v in table:
                                      if k == column || v== null:
@@ -38,8 +42,7 @@ macro_rules! impl_repo_update {
                   ) -> Result<rbatis::rbdc::db::ExecResult, rbatis::rbdc::Error> {
                       impled!()
                   }
-                  let mut table_name = rbatis::utils::string_util::to_snake_name(stringify!($table));
-                  table_name = table_name.trim_end_matches("_bo").to_string(); // remove suffix _bo
+                  let mut table_name = crate::repository::to_sql_table_name(stringify!($table));
                   let table = rbs::to_value!(table);
                   let result = $fn_name(&mut rb, table_name, &table, $($param_key,)*).await;
                 match result {
@@ -60,12 +63,11 @@ macro_rules! impl_repo_update {
     };
 }
 
-
 #[derive(Debug, Default)]
 pub struct InsertBatchResult {
-   pub rows_affected: u64,
-   pub insert_ids: Vec<i64>,
-}   
+    pub rows_affected: u64,
+    pub insert_ids: Vec<i64>,
+}
 
 #[macro_export]
 macro_rules! impl_repo_insert {
@@ -74,19 +76,19 @@ macro_rules! impl_repo_insert {
             $table,
             $insert_fn,
             $insert_batch_fn,
-            rbatis::utils::string_util::to_snake_name(stringify!($table)).trim_end_matches("_bo")
+            crate::repository::to_sql_table_name(stringify!($table))
         );
     };
     ($table:ty, $insert_fn:ident, $insert_batch_fn:ident, $table_name:expr) => {
         impl Repository {
-            pub async fn $insert_batch_fn (
+            pub async fn $insert_batch_fn(
                 &self,
                 mut rb: &DB,
                 tables: &mut [$table],
                 batch_size: u64,
             ) -> Result<crate::repository::InsertBatchResult, rbatis::rbdc::Error> {
                 #[rbatis::py_sql(
-                    "`insert into \"${table_name}\" (`
+                    "`insert into ${table_name} (`
              trim ',':
                for k,v in tables[0]:
                   if k == 'id' && v== null:
@@ -141,28 +143,25 @@ macro_rules! impl_repo_insert {
 
                 Ok(crate::repository::InsertBatchResult {
                     rows_affected: result.rows_affected,
-                    insert_ids
+                    insert_ids,
                 })
             }
-
         }
 
         impl Repository {
             pub async fn $insert_fn(
-                    &self,
-                    mut rb: &DB,
-                    mut table: $table,
-                ) -> Result<i64, rbatis::Error> {
-                    let result = self.$insert_batch_fn(rb, &mut [table.clone()], 1).await;
-                    match result {
-                        Ok(insert_result) => {
-                            let id = insert_result.insert_ids[0];
-                            Ok(id)
-                        },
-                        Err(_e) => {
-                            Err(rbatis::Error::E("Not found".to_string()))
-                        }
+                &self,
+                mut rb: &DB,
+                mut table: $table,
+            ) -> Result<i64, rbatis::Error> {
+                let result = self.$insert_batch_fn(rb, &mut [table.clone()], 1).await;
+                match result {
+                    Ok(insert_result) => {
+                        let id = insert_result.insert_ids[0];
+                        Ok(id)
                     }
+                    Err(_e) => Err(rbatis::Error::E("Not found".to_string())),
+                }
             }
         }
     };
@@ -170,14 +169,39 @@ macro_rules! impl_repo_insert {
 
 #[macro_export]
 macro_rules! impl_repo_select {
-    ($table:ty{$fn_name:ident($($param_key:ident:$param_type:ty$(,)?)*) => $sql:expr}) => {
+    ($table:ty{$fn_name:ident($($param_key:ident:$param_type:ty$(,)?)*) -> $container:tt => $sql:expr}) => {
         impl Repository{
-            pub async fn $fn_name(&self, mut rb: &DB, $($param_key:$param_type,)*)->Result<Vec<$table>, rbatis::rbdc::Error>{
-                   #[rbatis::py_sql("`select ${table_column} from ${table_name} `",$sql)]
-                   async fn $fn_name(rb: &mut dyn rbatis::executor::Executor,table_column:&str,table_name:&str,$($param_key:$param_type,)*) -> Result<Vec<$table>,rbatis::rbdc::Error> {impled!()}
-                   let mut table_column = "*".to_string();
-                   let mut table_name = rbatis::utils::string_util::to_snake_name(stringify!($table));
-                   $fn_name(&mut rb,&table_column,&table_name,$($param_key ,)*).await
+            pub async fn $fn_name(&self, mut rb: &DB, $($param_key:$param_type,)*)->Result<$container<$table>, rbatis::rbdc::Error>{
+                #[rbatis::py_sql("`select ${table_column} from ${table_name} `",$sql)]
+                async fn $fn_name(rb: &mut dyn rbatis::executor::Executor,table_column:&str,table_name:&str,$($param_key:$param_type,)*) -> Result<$container<$table>,rbatis::rbdc::Error> {impled!()}
+                let mut table_column = "*".to_string();
+                let mut table_name = crate::repository::to_sql_table_name(stringify!($table));
+                table_name = table_name.trim_end_matches("_bo").to_string(); // remove suffix _bo
+                $fn_name(&mut rb,&table_column,&table_name,$($param_key ,)*).await
+            }
+        }
+    };
+}
+
+#[macro_export]
+macro_rules! impl_repo_select_one {
+    ($table:ty{$fn_name:ident}) => {
+        impl Repository{
+            pub async fn $fn_name(&self, mut rb: &DB, id: i64)->Result<$table, rbatis::Error>{
+                #[rbatis::py_sql("`select ${table_column} from ${table_name} `", "`where id = #{id}`")]
+                async fn $fn_name(rb: &mut dyn rbatis::executor::Executor,table_column:&str,table_name:&str, id: i64) -> Result<Option<$table>,rbatis::rbdc::Error> {impled!()}
+                let mut table_column = "*".to_string();
+                let mut table_name = crate::repository::to_sql_table_name(stringify!($table));
+                let result = $fn_name(&mut rb,&table_column,&table_name, id).await;
+                match result {
+                    Ok(bo_option) => {
+                        match bo_option {
+                            Some(bo) => Ok(bo.to_owned()),
+                            None => Err(rbatis::Error::E("Not Found!".to_string())),
+                        }
+                    }
+                    Err(_) => Err(rbatis::Error::E("Not Found!".to_string())),
+                }
             }
         }
     };

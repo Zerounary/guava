@@ -1,6 +1,6 @@
 use super::Repository;
 use crate::{
-    drivers::db::DB, entities::UserBO, impl_repo_insert, impl_repo_select, impl_repo_update,
+    drivers::db::DB, entities::UserBO, impl_repo_insert, impl_repo_update, impl_repo_select_one,
 };
 use itertools::Itertools;
 use rbs::to_value;
@@ -14,15 +14,8 @@ impl Repository {
         let result = self.select_user_by_id(&pool, id).await;
 
         match result {
-            Ok(uesr_bos) => {
-                if uesr_bos.is_empty() {
-                    Err(rbatis::Error::E("Not Found!".to_string()))
-                } else {
-                    match uesr_bos.first() {
-                        Some(user_bo) => Ok(user_bo.to_owned()),
-                        None => Err(rbatis::Error::E("Not Found!".to_string())),
-                    }
-                }
+            Ok(bo) => {
+                Ok(bo.to_owned())
             }
             Err(_) => Err(rbatis::Error::E("Not Found!".to_string())),
         }
@@ -48,7 +41,8 @@ impl Repository {
     }
 }
 
-impl_repo_select!(UserBO{select_user_by_id(id: i64) => "`where id = #{id}`"});
+// impl_repo_select!(UserBO{select_user_by_id(id: i64) -> Option => "`where id = #{id}`"});
+impl_repo_select_one!(UserBO{select_user_by_id});
 
 impl_repo_update!(UserBO{update_user_by_id(id: i64) => "`where id = #{id}`"});
 
