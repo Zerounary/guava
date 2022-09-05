@@ -248,3 +248,25 @@ macro_rules! impl_repo_select_list {
         }
     };
 }
+
+
+#[macro_export]
+macro_rules! impl_repo_delete {
+    ($table:ty{$fn_name:ident}) => {
+        impl Repository {
+            pub async fn $fn_name(&self, pool: &DB, ids: Vec<i64>) -> Result<(), rbatis::Error> {
+                if ids.is_empty() {
+                    return Ok(());
+                }
+                let table_name = crate::repository::to_sql_table_name(stringify!($table));
+                let sql = format!(
+                    "DELETE FROM {} where id in ({})",
+                    table_name,
+                    ids.iter().join(",")
+                );
+                pool.fetch(sql.as_str(), vec![]).await.unwrap();
+                Ok(())
+            }
+        }
+    };
+}
