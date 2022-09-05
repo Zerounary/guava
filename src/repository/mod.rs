@@ -167,6 +167,10 @@ macro_rules! impl_repo_insert {
     };
 }
 
+// TODO 控制列表查询的最大数量
+// TODO 不使用 * 作为查询字段
+// TODO 添加翻页
+
 #[macro_export]
 macro_rules! impl_repo_select {
     ($table:ty{$fn_name:ident($($param_key:ident:$param_type:ty$(,)?)*) -> $container:tt => $sql:expr}) => {
