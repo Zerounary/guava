@@ -55,14 +55,16 @@ macro_rules! read {
             Resp::ok(res.into())
         }
     };
-    ($service_fn:ident($( $param_key:ident:$param_type:ident$(,)?)*) -> $vo:ty) => {
+    ($req_vo:ty > $service_fn:ident { $in_fn:item $out_fn:item } > $res_vo:ty) => {
         pub async fn $service_fn(
-            Path(id): Path<i64>,
+            Json(params): Json<$req_vo>,
             Extension(state): State,
-        ) -> AppResult<$vo> {
-            let res = state.service.$service_fn(id).await?;
-
-            Resp::ok(res.into())
+        ) -> AppResult<$res_vo> {
+            $in_fn
+            $out_fn
+            let result = state.service.$service_fn(into(params)).await?;
+            // let vos = result.iter().map(|x| UserVO::from(x)).collect_vec();
+            Resp::ok(outo(result))
         }
     };
 }

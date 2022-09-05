@@ -1,7 +1,7 @@
 use crate::{
     create, read,
     server::api::model::{CreateUserVO, UpdateUserVO, UserVO, UserOptionVO},
-    service::user_service::{CreateUserInput, UpdateUserInput}, update, delete,
+    service::user_service::{CreateUserInput, UpdateUserInput}, update, delete, entities::UserBO,
 };
 use axum::{
     extract::Path,
@@ -15,15 +15,25 @@ use super::{AppResult, Resp, State};
 
 read!(find_user_by_id -> UserVO);
 read!(find_user_by_id_no_cache -> UserVO);
-// read!(find_user_by_done(Path(done): ) -> Vec<UserVO>);
+read!(UserOptionVO > find_user_by_done {
+    fn into(vo: UserOptionVO) -> bool {
+        let done = vo.done.unwrap_or(false);
+        done
+    }
+    fn outo(result:Vec<UserBO>) -> Vec<UserVO> {
+        result.iter().map(|x| UserVO::from(x)).collect_vec()
+    }
+} > Vec<UserVO>);
 
-pub async fn find_user_by_done(Json(params): Json<UserOptionVO>, Extension(state): State) -> AppResult<Vec<UserVO>> {
-
-    let done = params.done.unwrap_or(false);
-    let result = state.service.find_user_by_done(done).await?;
-    let vos = result.iter().map(|x| UserVO::from(x)).collect_vec();
-    Resp::ok(vos)
-}
+// pub async fn find_user_by_done(Json(params): Json<UserOptionVO>, Extension(state): State) -> AppResult<Vec<UserVO>> {
+//     fn into(vo: UserOptionVO) ->  bool {
+//         let done = vo.done.unwrap_or(false);
+//         done
+//     }
+//     let result = state.service.find_user_by_done(into(params)).await?;
+//     let vos = result.iter().map(|x| UserVO::from(x)).collect_vec();
+//     Resp::ok(vos)
+// }
 
 create!(CreateUserVO > create_user(CreateUserInput)  > UserVO);
 
