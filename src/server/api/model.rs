@@ -10,18 +10,13 @@ use crate::{
 pub struct CreateUserVO {
     pub username: String,
 }
+
+// TODO 自动生成 VO 和 BO 的相互转换
+
 impl From<CreateUserVO> for CreateUserInput {
     fn from(s: CreateUserVO) -> Self {
         CreateUserInput {
             username: s.username,
-        }
-    }
-}
-
-impl From<&CreateUserVO> for CreateUserInput {
-    fn from(s: &CreateUserVO) -> Self {
-        CreateUserInput {
-            username: s.username.clone(),
         }
     }
 }
@@ -74,5 +69,23 @@ impl From<&UserBO> for UserVO {
             username: user.username.clone(),
             done: user.done,
         }
+    }
+}
+
+
+#[cfg(test)]
+mod test {
+    #[derive(Debug, Default)]
+    struct E {
+        f: i32,
+    }
+    #[derive(Default, Debug)]
+    struct A {
+        a: i32,
+        b: Option<i32>,
+        e: E
+    }
+    fn test() {
+     let a = A::default();
     }
 }

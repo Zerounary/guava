@@ -170,6 +170,7 @@ macro_rules! impl_repo_insert {
 // TODO 控制列表查询的最大数量
 // TODO 不使用 * 作为查询字段
 // TODO 添加翻页
+// TODO 使用 ident 拼接自动批量生成 基础方法
 
 #[macro_export]
 macro_rules! impl_repo_select {

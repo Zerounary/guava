@@ -87,7 +87,7 @@ macro_rules! create {
             Json(params): Json<Vec<$req_vo>>,
             Extension(state): State,
         ) -> AppResult<Vec<$res_vo>> {
-            let service_input: Vec<$service_input> = params.iter().map(|x| x.into()).collect();
+            let service_input: Vec<$service_input> = params.into_iter().map(|x| x.into()).collect();
             let user = state.service.$service_fn(service_input).await?;
 
             Resp::ok(user.into())
