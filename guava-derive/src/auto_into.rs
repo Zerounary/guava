@@ -58,7 +58,7 @@ impl AutoIntoContext {
             .map(|Fd { name, optional, ty}| {
                 if *optional {
                     return quote! {
-                        #name: s.#name.take()
+                        #name: s.#name.unwrap()
                     };
                 }
 

@@ -16,30 +16,22 @@ pub struct CreateUserVO {
 
 // TODO 自动生成 VO 和 BO 的相互转换
 
-// impl From<CreateUserVO> for CreateUserInput {
-//     fn from(s: CreateUserVO) -> Self {
-//         CreateUserInput {
-//             username: s.username,
-//         }
-//     }
-// }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, AutoInto)]
 pub struct UpdateUserVO {
     pub id: Option<i64>,
     pub username: String,
     pub done: bool,
 }
-
-impl Into<UpdateUserInput> for UpdateUserVO {
-    fn into(self) -> UpdateUserInput {
-        UpdateUserInput {
-            id: self.id.unwrap(),
-            username: self.username,
-            done: self.done,
-        }
-    }
-}
+// impl From<UpdateUserVO> for UpdateUserInput {
+//     fn from(s: UpdateUserVO) -> Self {
+//         UpdateUserInput {
+//             username: s.username,
+//             id: s.id.unwrap(),
+//             done: s.done
+//         }
+//     }
+// }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
 pub struct UserOptionVO {

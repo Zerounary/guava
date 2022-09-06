@@ -20,7 +20,7 @@ pub struct CreateUserInput {
     pub username: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 pub struct UpdateUserInput {
     pub id: i64,
     pub username: String,
