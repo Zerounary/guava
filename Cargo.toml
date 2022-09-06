@@ -11,6 +11,8 @@ readme = "README.md"
 
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[workspace]
+members = ["guava-derive"]
 
 
 [dependencies]
@@ -34,3 +36,5 @@ rbdc-pg = "0.1.16"
 
 log = "0.4.17"
 fast_log = "1.5"
+
+guava-derive ={ path = "./guava-derive"}

@@ -1,0 +1,5 @@
+/target
+guava.db
+*.db
+*.db.*
+*.exe

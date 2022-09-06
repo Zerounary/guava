@@ -14,7 +14,7 @@ pub enum UserRepoError {
     InvalidUsername,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Default, Deserialize)]
 #[allow(dead_code)]
 pub struct CreateUserInput {
     pub username: String,

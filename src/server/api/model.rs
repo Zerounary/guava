@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use guava_derive::AutoInto;
+
 use crate::{
     entities::{UserBO},
     service::user_service::{CreateUserInput, UpdateUserInput},
@@ -7,19 +9,20 @@ use crate::{
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
+#[derive(AutoInto)]
 pub struct CreateUserVO {
     pub username: String,
 }
 
 // TODO 自动生成 VO 和 BO 的相互转换
 
-impl From<CreateUserVO> for CreateUserInput {
-    fn from(s: CreateUserVO) -> Self {
-        CreateUserInput {
-            username: s.username,
-        }
-    }
-}
+// impl From<CreateUserVO> for CreateUserInput {
+//     fn from(s: CreateUserVO) -> Self {
+//         CreateUserInput {
+//             username: s.username,
+//         }
+//     }
+// }
 
 #[derive(Debug, Deserialize)]
 pub struct UpdateUserVO {

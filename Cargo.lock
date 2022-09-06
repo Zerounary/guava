@@ -652,6 +652,7 @@ dependencies = [
  "cached",
  "dotenv",
  "fast_log",
+ "guava-derive",
  "itertools",
  "lazy_static",
  "log",
@@ -663,6 +664,16 @@ dependencies = [
  "serde_json",
  "tokio",
  "uuid",
+]
+
+[[package]]
+name = "guava-derive"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
