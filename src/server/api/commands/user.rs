@@ -23,7 +23,7 @@ read!(UserOptionVO > find_user_list {
         }
     }
     fn outo(result:Vec<UserBO>) -> Vec<UserVO> {
-        result.iter().map(|x| UserVO::from(x)).collect_vec()
+        result.into_iter().map(|x| x.into() ).collect_vec()
     }
 } > Vec<UserVO>);
 

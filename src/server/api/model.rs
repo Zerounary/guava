@@ -1,72 +1,49 @@
 use serde::{Deserialize, Serialize};
+use struct_convert::Convert;
 
-use guava_derive::AutoInto;
 
 use crate::{
-    entities::{UserBO},
+    entities::{UserBO, UserOptionBO},
     service::user_service::{CreateUserInput, UpdateUserInput},
 };
 
 #[derive(Debug, Deserialize)]
 #[allow(dead_code)]
-#[derive(AutoInto)]
+#[derive(Convert)]
+#[convert(into = "CreateUserInput")]
 pub struct CreateUserVO {
     pub username: String,
 }
 
-// TODO 自动生成 VO 和 BO 的相互转换
-
-
-#[derive(Debug, Deserialize, AutoInto)]
+#[derive(Convert)]
+#[convert(into = "UpdateUserInput")]
+#[derive(Debug, Deserialize)]
 pub struct UpdateUserVO {
+    #[convert_field(unwrap)]
     pub id: Option<i64>,
     pub username: String,
     pub done: bool,
 }
-// impl From<UpdateUserVO> for UpdateUserInput {
-//     fn from(s: UpdateUserVO) -> Self {
-//         UpdateUserInput {
-//             username: s.username,
-//             id: s.id.unwrap(),
-//             done: s.done
-//         }
-//     }
-// }
+
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Convert)]
+#[convert(into = "UserOptionBO")]
 pub struct UserOptionVO {
+    #[convert_field(ignore)]
     pub id: Option<i64>,
     pub username: Option<String>,
     pub done: Option<bool>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Convert)]
+#[convert(from = "UserBO")]
 pub struct UserVO {
     pub id: i64,
     pub username: String,
     pub done: bool,
 }
-
-impl From<UserBO> for UserVO {
-    fn from(user: UserBO) -> Self {
-        UserVO {
-            id: user.id,
-            username: user.username,
-            done: user.done,
-        }
-    }
-}
-
-impl From<&UserBO> for UserVO {
-    fn from(user: &UserBO) -> Self {
-        UserVO {
-            id: user.id,
-            username: user.username.clone(),
-            done: user.done,
-        }
-    }
-}
-
 
 #[cfg(test)]
 mod test {

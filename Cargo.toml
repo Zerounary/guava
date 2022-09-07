@@ -26,6 +26,7 @@ anyhow = { version = "1.0.62"}
 lazy_static = "1.4.0"
 dotenv = { version = "0.15.0"}
 itertools = "0.10.2"  
+struct-convert = "1.0.1"
 
 cached = "0.38.0"
 moka = "0.9.3"
