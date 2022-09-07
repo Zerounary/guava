@@ -28,19 +28,11 @@ pub struct AppState {
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().unwrap();
 
-    // let db = DBOptions::new()
-    //     .max_connections(MAX_CONNECTIONS.as_str().parse().unwrap())
-    //     .connect(DATABASE_URL.as_str())
-    //     .await?;
-
-    // sqlx::migrate!().run(&db).await?;
-
     let db = Rbatis::new();
 
     db.init(PgDriver {}, DATABASE_URL.as_str()).unwrap();
     fast_log::init(fast_log::Config::new().console()).expect("rbatis init fail");
 
-    // db.log_plugin.set_level(log::Level::Info, log::Level::Debug);
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.

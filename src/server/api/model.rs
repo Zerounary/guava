@@ -45,20 +45,3 @@ pub struct UserVO {
     pub username: String,
     pub done: bool,
 }
-
-#[cfg(test)]
-mod test {
-    #[derive(Debug, Default)]
-    struct E {
-        f: i32,
-    }
-    #[derive(Default, Debug)]
-    struct A {
-        a: i32,
-        b: Option<i32>,
-        e: E
-    }
-    fn test() {
-     let a = A::default();
-    }
-}
