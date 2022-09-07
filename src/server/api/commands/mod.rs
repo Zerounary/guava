@@ -45,7 +45,7 @@ pub fn resp_err(code: i32, msg: String) -> Json<Resp<Empty>> {
 // TODO 编写 宏 来收敛重复的代码
 #[macro_export]
 macro_rules! read {
-    ($service_fn:ident -> $vo:ty) => {
+    ($service_fn:ident > $vo:ty) => {
         pub async fn $service_fn(
             Path(id): Path<i64>,
             Extension(state): State,
@@ -53,6 +53,16 @@ macro_rules! read {
             let res = state.service.$service_fn(id).await?;
 
             Resp::ok(res.into())
+        }
+    };
+    ($req_vo:ty > $service_fn:ident > $res_vo:ty) => {
+        pub async fn $service_fn(
+            Json(params): Json<$req_vo>,
+            Extension(state): State,
+        ) -> AppResult<$res_vo> {
+            let result = state.service.$service_fn(params.into()).await?;
+            let vos = result.into_iter().map(|x| x.into()).collect_vec();
+            Resp::ok(vos)
         }
     };
     ($req_vo:ty > $service_fn:ident { $in_fn:item $out_fn:item } > $res_vo:ty) => {
