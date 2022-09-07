@@ -40,7 +40,8 @@ pub struct UserOptionVO {
 #[derive(Convert)]
 #[convert(from = "UserBO")]
 pub struct UserVO {
-    pub id: i64,
+    #[convert_field(to_string)]
+    pub id: String,
     pub username: String,
     pub done: bool,
 }
