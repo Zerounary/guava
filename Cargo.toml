@@ -18,6 +18,7 @@ members = ["guava-derive"]
 [dependencies]
 axum = "0.5.15"
 tokio = { version =  "1.20.1", features = ["full"]}
+tower-http = {version = "0.3.4", features = ["fs"]}
 
 serde_json ={ version = "1.0.85"}
 serde = { version = "1.0", features = ["derive"] }
@@ -28,7 +29,6 @@ dotenv = { version = "0.15.0"}
 itertools = "0.10.2"  
 struct-convert = "1.0.1"
 
-cached = "0.38.0"
 moka = "0.9.3"
 
 rbs = "0.1.11"
