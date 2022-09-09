@@ -7,7 +7,6 @@ pub mod service;
 use crate::{
     drivers::db::{DATABASE_URL},
     server::api::commands::{
-        hello::hello_world,
         user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_list },
     },
     service::Service,
@@ -16,6 +15,7 @@ use axum::{
     routing::{get, post},
     Extension, Router,
 };
+use tower_http::{trace::TraceLayer};
 use rbatis::Rbatis;
 use rbdc_pg::{driver::PgDriver};
 use std::{env, net::SocketAddr, sync::Arc};
@@ -25,9 +25,10 @@ pub struct AppState {
     service: Service,
 }
 
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    dotenv::dotenv().unwrap();
+    dotenv::dotenv().ok();
 
     let db = Rbatis::new();
 
@@ -43,7 +44,7 @@ async fn main() -> anyhow::Result<()> {
 
     // build our application with a route
     let app = Router::new()
-        .route("/", get(hello_world))
+        // .route("/", get(hello_world))
         .route("/users/no_cache/:id", get(find_user_by_id_no_cache))
         .route("/users/cache/:id", get(find_user_by_id))
         .route("/users/list", post(find_user_list))
@@ -53,7 +54,9 @@ async fn main() -> anyhow::Result<()> {
         )
         .route("/users", post(create_user))
         .route("/users/batch", post(create_user_batch))
-        .layer(Extension(service));
+        .merge(axum_extra::routing::SpaRouter::new("/assets", "dist/assets").index_file("../index.html")) // 静态页面直接复制dist目录到guava同级目录 会匹配首页
+        .layer(Extension(service))
+        .layer(TraceLayer::new_for_http());
 
     // run it
     let port = env::var("PORT").unwrap_or_default().parse().unwrap_or(3000);
