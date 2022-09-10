@@ -5,7 +5,7 @@ pub mod server;
 pub mod service;
 
 use crate::{
-    drivers::db::{init_DB},
+    drivers::db::{init_DB, migrate},
     server::api::commands::{
         user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_list },
     },
@@ -27,6 +27,8 @@ pub struct AppState {
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
+
+    migrate().await;
 
     let db = init_DB();
 

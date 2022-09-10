@@ -8,6 +8,7 @@ use rbdc_sqlite::{driver::SqliteDriver};
 use rbdc_pg::options::PgConnectOptions;
 use url::Url;
 
+
 // alias DB pool type
 pub type DB = Rbatis;
 pub type DBOptions = PgConnectOptions;
@@ -20,6 +21,8 @@ lazy_static! {
     pub static ref MAX_CONNECTIONS: String =
         env::var("MAX_CONNECTIONS").unwrap_or(String::from("200"));
     
+    pub static ref MIGRATE_PATH: String =
+        env::var("MIGRATE_PATH").unwrap_or(String::from("./migrations"));
 }
 
 pub enum DB_TYPE {
@@ -40,7 +43,7 @@ pub fn get_db_type() -> DB_TYPE {
             }
         },
         None => {
-            panic!("uncurrent database url")
+            panic!("Incorrect database url")
         }
     }
 }
@@ -59,4 +62,30 @@ pub fn init_DB() -> Rbatis  {
     fast_log::init(fast_log::Config::new().console()).expect("rbatis init fail");
 
     db
+}
+
+mod embedded {
+    use refinery::embed_migrations;
+    embed_migrations!("./migrations");
+}
+
+pub async fn migrate() {
+    match get_db_type() {
+        DB_TYPE::Mysql => {
+            let pool = mysql::Pool::new(DATABASE_URL.as_str()).expect("Incorrect database url");
+            let mut conn = pool.get_conn().expect("can't connect to mysql.");
+            match embedded::migrations::runner().run(&mut conn) {
+                Ok(_) => {},
+                Err(e) => {
+                    panic!("\nDatabase migrate Error: \n{:?}", e.kind());
+                },
+            }
+        },
+        DB_TYPE::Pg => {
+            todo!()
+        },
+        DB_TYPE::Sqlite => {
+            todo!()
+        },
+    };
 }
