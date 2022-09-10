@@ -22,7 +22,6 @@ pub struct UpdateUserVO {
     #[convert_field(unwrap)]
     pub id: Option<i64>,
     pub username: String,
-    pub done: bool,
 }
 
 
@@ -33,7 +32,6 @@ pub struct UserOptionVO {
     #[convert_field(ignore)]
     pub id: Option<i64>,
     pub username: Option<String>,
-    pub done: Option<bool>,
 }
 
 #[derive(Debug, Default, Serialize, Deserialize)]
@@ -43,5 +41,4 @@ pub struct UserVO {
     #[convert_field(to_string)]
     pub id: String,
     pub username: String,
-    pub done: bool,
 }

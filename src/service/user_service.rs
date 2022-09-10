@@ -24,7 +24,6 @@ pub struct CreateUserInput {
 pub struct UpdateUserInput {
     pub id: i64,
     pub username: String,
-    pub done: bool,
 }
 
 impl Service {
@@ -95,7 +94,6 @@ impl Service {
         let user = UserBO {
             id: input.id,
             username: input.username,
-            done: input.done,
         };
         let result = self.repo.update_user_by_id(&self.db, &user, user.id).await;
 

@@ -23,8 +23,6 @@ impl_repo_select_list!(UserBO{select_user_list(user:UserOptionBO) =>
     // 此处 可以用 py_sql 和 html_sql 对比使用
 r#"
 where:
-  if user.done != null:
-    `and done = #{user.done}`
   if user.username != null && user.username != '':
     `and username = #{user.username}`
   "#});
