@@ -890,7 +890,6 @@ dependencies = [
  "log",
  "moka",
  "mysql",
- "postgres",
  "rbatis",
  "rbdc-mysql",
  "rbdc-pg",
@@ -901,6 +900,7 @@ dependencies = [
  "serde_json",
  "struct-convert",
  "tokio",
+ "tokio-postgres",
  "tower-http",
  "url",
  "uuid 1.1.2",
@@ -1813,20 +1813,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1df8c4ec4b0627e53bdf214615ad287367e482558cf84b109250b37464dc03ae"
 
 [[package]]
-name = "postgres"
-version = "0.19.4"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "960c214283ef8f0027974c03e9014517ced5db12f021a9abb66185a5751fab0a"
-dependencies = [
- "bytes",
- "fallible-iterator",
- "futures-util",
- "log",
- "tokio",
- "tokio-postgres",
-]
-
-[[package]]
 name = "postgres-protocol"
 version = "0.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2198,12 +2184,13 @@ dependencies = [
  "lazy_static",
  "log",
  "mysql",
- "postgres",
  "regex",
  "serde",
  "siphasher",
  "thiserror",
  "time",
+ "tokio",
+ "tokio-postgres",
  "toml",
  "url",
  "walkdir",

@@ -5,7 +5,7 @@ pub mod server;
 pub mod service;
 
 use crate::{
-    drivers::db::{init_DB, migrate},
+    drivers::db::{init_db, migrate},
     server::api::commands::{
         user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_list },
     },
@@ -30,7 +30,7 @@ async fn main() -> anyhow::Result<()> {
 
     migrate().await;
 
-    let db = init_DB();
+    let db = init_db();
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.
