@@ -5,7 +5,7 @@ pub mod server;
 pub mod service;
 
 use crate::{
-    drivers::db::{DATABASE_URL},
+    drivers::db::{init_DB},
     server::api::commands::{
         user::{create_user, delete_user_ids, find_user_by_id, find_user_by_id_no_cache, update_user, create_user_batch, find_user_list },
     },
@@ -16,8 +16,6 @@ use axum::{
     Extension, Router,
 };
 use tower_http::{trace::TraceLayer};
-use rbatis::Rbatis;
-use rbdc_pg::{driver::PgDriver};
 use std::{env, net::SocketAddr, sync::Arc};
 use tokio::signal;
 
@@ -30,11 +28,7 @@ pub struct AppState {
 async fn main() -> anyhow::Result<()> {
     dotenv::dotenv().ok();
 
-    let db = Rbatis::new();
-
-    db.init(PgDriver {}, DATABASE_URL.as_str()).unwrap();
-    fast_log::init(fast_log::Config::new().console()).expect("rbatis init fail");
-
+    let db = init_DB();
 
     // Inject a `AppState` into our handlers via a trait object. This could be
     // the live implementation or just a mock for testing.

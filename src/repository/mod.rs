@@ -1,3 +1,5 @@
+use crate::drivers::db::get_db_type;
+
 pub mod user_repo;
 
 #[derive(Debug, Eq, PartialEq, Hash)]
@@ -11,7 +13,11 @@ impl Repository {
 
 pub fn to_sql_table_name(table_name: &str) -> String {
     let name = rbatis::utils::string_util::to_snake_name(&table_name).trim_end_matches("_bo").to_string();
-    format!(r#""{}""#, name)
+    match get_db_type() {
+        crate::drivers::db::DB_TYPE::Mysql => format!(r#"`{}`"#, name),
+        crate::drivers::db::DB_TYPE::Pg => format!(r#""{}""#, name),
+        crate::drivers::db::DB_TYPE::Sqlite => format!(r#""{}""#, name),
+    }
 }
 
 #[macro_export]
